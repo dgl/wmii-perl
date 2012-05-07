@@ -81,8 +81,9 @@ sub event_destroy_client {
 sub key_terminal_here(Modkey-Control-Return) {
   my($self) = @_;
 
-  my($cur_id) = wmiir "/client/sel/ctl";
-  my $pid = $self->clients->{$cur_id // ""}[3] || $$;
+  my($cur_id, @items) = wmiir "/client/sel/ctl";
+  my $pid = $self->clients->{$cur_id // ""}[3] ||
+    (map /(\d+)/, grep /^pid /, @items)[0];
   my $fork = fork;
   return if $fork || not defined $fork;
   if(-d "/proc/$pid/cwd") {
