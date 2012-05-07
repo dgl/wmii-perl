@@ -49,6 +49,10 @@ version.)
 
 License as Perl 5.14. No warranty.
 
+There's some screenshots at: https://github.com/dgl/wmii-perl/wiki/Screenshots
+Although most of it isn't really visible in a screenshot (if someone wants to
+send me a screencast you're welcome, but I don't feel like doing one).
+
 PS: Coding style for this is (in Vim terms): et sw=2 tw=80
 
 -- 
