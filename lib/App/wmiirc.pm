@@ -1,3 +1,4 @@
+# ABSTRACT: An event loop for wmii (X11 window manager)
 package App::wmiirc;
 use 5.014;
 use App::wmiirc::Util;
@@ -124,3 +125,9 @@ sub load {
 }
 
 1;
+
+=head1 DESCRIPTION
+
+Please see the F<README> for details for now.
+
+=cut
