@@ -45,7 +45,7 @@ sub render {
 
   my $vol = `amixer get $self->{device},0`;
   $self->volume(($vol =~ /\[(off)\]/)[0] || $vol =~ /\[(\d+)%\]/);
-
+  return unless defined $self->volume;
   $self->label($self->volume . ($self->volume =~ /\d/ && '%'));
 }
 
