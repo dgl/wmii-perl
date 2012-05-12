@@ -24,7 +24,7 @@ There are some modules you might be interested in:
 
   * backlight - Control laptop backlight
   * battery - Show battery status (on Linux)
-  * client - A few useful things like Modkey-v to go to a client by name
+  * client - A few useful things like Modkey-/ to go to a client by name
   * clock - As you'd expect, with some support for switching timezone
   * dwim - Somewhat useful (albeit quirky) launcher type thing, for files/URLs
   * loadavg - Load average
