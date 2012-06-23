@@ -45,7 +45,7 @@ sub action_default {
   } else {
     my($host, $rest) = split m{/}, $action, 2;
 
-    if(exists $aliases{$host}) {
+    if(defined $host && exists $aliases{$host}) {
       system config("commands", "browser") . " '" .
           sprintf($aliases{$host}, uri_escape_utf8 "$rest@args") . "'&";
     # TODO: Use IO::Async's lookup code for non-blocking here
