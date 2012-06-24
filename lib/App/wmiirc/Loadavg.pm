@@ -9,6 +9,13 @@ has name => (
   default => sub { "loadavg" }
 );
 
+has _cpus => (
+  is => 'ro',
+  default => sub {
+    ((`getconf _NPROCESSORS_ONLN` || `/sbin/sysctl hw.ncpu`) =~ /(\d+)/)[0];
+  }
+);
+
 has _show_all => (
   is => 'rw',
   default => sub {
@@ -17,11 +24,17 @@ has _show_all => (
   }
 );
 
+with 'App::wmiirc::Role::Fade';
 with 'App::wmiirc::Role::Widget';
-#with 'App::wmiirc::Role::Fade';
 
 sub BUILD {
   my($self) = @_;
+
+  my $normcolors = $self->core->main_config->{normcolors};
+  # Only the foreground color is configurable for now
+  my $load_color = config("load", "color", "#992222");
+  $self->fade_start_color($normcolors);
+  $self->fade_end_color($normcolors =~ s/(\S+)/$load_color/r);
 
   my $timer = IO::Async::Timer::Periodic->new(
     interval => 10,
@@ -38,7 +51,13 @@ sub BUILD {
 
 sub render {
   my($self) = @_;
-  $self->label(join " ", (Unix::Uptime->load)[0 .. $self->{_show_all} && 2]);
+  my @load = Unix::Uptime->load;
+  my $load_scale = $load[0] / $self->_cpus * $self->fade_count;
+
+  $self->fade_set($load_scale > $self->fade_count ?
+    $self->fade_count : $load_scale);
+  $self->label(join(" ", @load[0 .. $self->{_show_all} && 2]),
+    $self->fade_current_color);
 }
 
 sub widget_click {
