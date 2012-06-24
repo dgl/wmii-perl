@@ -10,7 +10,16 @@ use Try::Tiny;
 
 $SIG{PIPE} = 'IGNORE';
 
-our $DEBUG = !!$ENV{WMIIP_DEBUG};
+our $DEBUG;
+BEGIN {
+  $DEBUG = !!$ENV{WMIIP_DEBUG};
+
+  if($DEBUG) {
+    require Carp;
+    Carp->import('verbose');
+    $SIG{__DIE__} = \&Carp::confess;
+  }
+}
 
 has loop => (
   is => 'ro',
@@ -52,7 +61,7 @@ sub BUILD {
 
   # Load configured modules
   my %modules = config("modules", { key => "", tag => "" });
-  $self->load($_) for keys %modules;
+  $self->load(/::/ ? $_ : "App::wmiirc::\u$_") for keys %modules;
 
   # Run configured external programs
   for(split /\n/, scalar config("startup") || "witray") {
@@ -101,22 +110,25 @@ sub dispatch {
   for my $module(grep /::$/, keys %App::wmiirc::) {
     my $class = "App::wmiirc::" . $module =~ s/::$//r;
     if($class->can($event)) {
-      warn "Dispatch: $event (@args) to $class\n" if $DEBUG;
+      print STDERR "Dispatch: $event (@args) to $class\n" if $DEBUG;
       $self->{cache}{$class} ||= $self->load($class);
-      $self->{cache}{$class}->$event(@args);
+      if(!ref $self->{cache}{$class}) {
+        warn "Failed to instantiate $class\n";
+      } else {
+        $self->{cache}{$class}->$event(@args);
+      }
     }
   }
 }
 
 sub load {
   my($self, $class) = @_;
-  $class = "App::wmiirc::" . ucfirst $class;
   warn "Loading $class\n" if $DEBUG;
   my $file = $class =~ s{::}{/}rg;
   $file .= ".pm";
   try {
     # Make it so a bad module doesn't kill the whole thing and can usually be
-    # recovered from with a simple ^Awmiirc.
+    # recovered from with a simple Modkey-a wmiirc.
     require $file;
     $self->{cache}{$class} = $class->new(core => $self);
   } catch {
