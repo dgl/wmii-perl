@@ -1,7 +1,7 @@
 package App::wmiirc::Loadavg;
 use 5.014;
 use App::wmiirc::Plugin;
-use IO::Async::Timer::Countdown;
+use IO::Async::Timer::Periodic 0.50;
 use Unix::Uptime;
 
 has name => (
@@ -23,13 +23,12 @@ with 'App::wmiirc::Role::Widget';
 sub BUILD {
   my($self) = @_;
 
-  my $timer = IO::Async::Timer::Countdown->new(
-    delay => 10,
-    on_expire => sub {
-      my($timer) = @_;
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 10,
+    on_tick => sub {
       $self->render;
-      $timer->start;
-    }
+    },
+    reschedule => 'skip',
   );
 
   $timer->start;

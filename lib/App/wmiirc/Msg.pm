@@ -11,8 +11,9 @@ has _timer => (
   is => 'rw',
 );
 
-with 'App::wmiirc::Role::Widget';
+with 'App::wmiirc::Role::Action';
 with 'App::wmiirc::Role::Fade';
+with 'App::wmiirc::Role::Widget';
 
 sub event_msg {
   my($self, @msg) = @_;
@@ -63,5 +64,6 @@ sub widget_click {
   $self->label(" ");
   $self->_timer(undef);
 }
+*action_clear_msg = *action_clear_msg = *widget_click;
 
 1;

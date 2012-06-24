@@ -1,7 +1,7 @@
 package App::wmiirc::Battery;
 use App::wmiirc::Plugin;
 use Const::Fast;
-use IO::Async::Timer::Countdown;
+use IO::Async::Timer::Periodic 0.50;
 use POSIX qw(strftime);
 
 const my $BATTERY_SYS => '/sys/class/power_supply';
@@ -37,13 +37,12 @@ sub BUILD {
   $self->fade_start_color('#ffffff #aa2222 #ff44cc');
   $self->fade_end_color('#ffffff #999922 #ff4444');
 
-  my $timer = IO::Async::Timer::Countdown->new(
-    delay => 30,
-    on_expire => sub {
-      my($timer) = @_;
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 30,
+    on_tick => sub {
       $self->render;
-      $timer->start;
     },
+    reschedule => 'skip',
   );
 
   $self->render;

@@ -1,7 +1,7 @@
 package App::wmiirc::Volume;
 use 5.014;
 use App::wmiirc::Plugin;
-use IO::Async::Timer::Countdown;
+use IO::Async::Timer::Periodic;
 
 # TODO: Split actual audio volume control into another module and fix the stupid
 # logic. Anything on CPAN?
@@ -27,13 +27,12 @@ with 'App::wmiirc::Role::Widget';
 
 sub BUILD {
   my($self) = @_;
-  my $timer = IO::Async::Timer::Countdown->new(
-    delay => 10,
-    on_expire => sub {
-      my($timer) = @_;
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 10,
+    on_tick => sub {
       $self->render;
-      $timer->start;
-    }
+    },
+    reschedule => 'skip',
   );
   $timer->start;
   $self->core->loop->add($timer);
