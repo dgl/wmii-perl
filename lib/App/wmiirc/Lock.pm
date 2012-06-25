@@ -2,6 +2,44 @@ package App::wmiirc::Lock;
 use App::wmiirc::Plugin;
 with 'App::wmiirc::Role::Action';
 
+has state => (
+  is => 'rw',
+  default => sub { "unblank" },
+);
+
+sub BUILD {
+  my($self) = @_;
+
+  $self->core->loop->open_child(
+    command => [ "xscreensaver-command", "-watch" ],
+    stdout => {
+      on_read => sub {
+        my($stream, $buffref, $eof) = @_;
+        while($$buffref =~ s/^(\w+) .*\n// ) {
+          $self->_handle(lc $1);
+        }
+        return 0;
+      },
+    },
+    on_finish => sub {
+      # TODO: Handle this
+    },
+  );
+}
+
+sub _handle {
+  my($self, $action) = @_;
+  return if $action eq 'run';
+
+  if($action eq 'unblank' && $self->{state} =~ /^(lock|blank)/) {
+    wmiir "/event", "SessionActive", $action;
+  } elsif($self->{state} eq 'unblank' && $action =~ /^(lock|blank)/) {
+    wmiir "/event", "SessionInactive", $action;
+  }
+
+  $self->state($action);
+}
+
 sub action_lock {
   system config("commands", "lock", "xscreensaver-command -lock");
 }
