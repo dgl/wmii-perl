@@ -80,8 +80,8 @@ sub key_close(Modkey-Shift-c) {
 }
 
 sub key_action(Modkey-a) {
-  my($self) = @_;
-  my($action, @args) = split / /,
+  my($self, @opts) = @_;
+  my($action, @args) = @opts ? @opts : split / /,
     wimenu { name => "action:", history => "actions" },
       sort grep !/^default$/, keys $self->core->{actions};
 
