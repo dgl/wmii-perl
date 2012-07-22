@@ -89,7 +89,7 @@ sub wimenu {
     @items && ref $items[0] eq 'ARRAY' ? @{$items[0]} : @items), "\n";
   close $in_fh;
   waitpid $pid, 0;
-  (<$out_fh> =~ /(.*)/)[0];
+  $? ? undef : (<$out_fh> =~ /(.*)/)[0];
 }
 
 1;
