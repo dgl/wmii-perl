@@ -1,0 +1,45 @@
+#!/bin/bash
+# There are almost certainly security holes in this, use with care.
+
+IF=wlan0
+NET="${1}"
+
+[ -t 1 ] && S=sudo || S="gksudo --"
+[ $UID != 0 ] && exec $S $0 "$*"
+HOME=/home/$SUDO_USER
+
+killall wpa_supplicant 2>/dev/null
+rfkill unblock wifi
+
+if [ -z "${NET}" ]; then
+  while ! iwlist $IF scan | egrep ESSID:; do
+    ifconfig $IF up
+    sleep 0.5
+  done
+  while read net; do
+    if [ -f "$HOME/.wpa.${net}" ]; then
+      NET="${net}"
+    fi
+  done < <(iwlist scan 2>/dev/null | awk '/ESSID/ { print substr($1, 8, length($1) - 8) }')
+fi
+
+if [ -z "${NET}" ]; then
+  echo "No networks found"
+fi
+
+ifconfig $IF up
+iwconfig $IF essid "$NET"
+if [ -f "$HOME/.wpa.$NET" ]; then
+  wpa_supplicant -c "$HOME/.wpa.$NET" -B -i $IF&
+  sleep 2
+fi
+dhcpcd $IF
+
+if [ -x "$HOME/.wpa.$NET.post-up" ]; then
+  while sleep 1; do
+    if ifconfig $IF | grep -qc inet\ ; then
+      sudo -u $SUDO_USER "$HOME/.wpa.$NET.post-up"
+      exit
+    fi
+  done
+fi
