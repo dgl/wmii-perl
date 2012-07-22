@@ -81,9 +81,10 @@ sub key_close(Modkey-Shift-c) {
 
 sub key_action(Modkey-a) {
   my($self, @opts) = @_;
-  my($action, @args) = @opts ? @opts : split / /,
-    wimenu { name => "action:", history => "actions" },
+  my $menu = wimenu { name => "action:", history => "actions" },
       sort grep !/^default$/, keys $self->core->{actions};
+  return unless defined $menu;
+  my($action, @args) = @opts ? @opts : split / /, $menu;
 
   if($action) {
     if(exists $self->core->{actions}{$action}) {
