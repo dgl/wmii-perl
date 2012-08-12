@@ -97,10 +97,13 @@ sub run {
     }
   ));
 
-  try {
-    $self->loop->run;
-  } catch {
-    warn "Runloop failed: $_";
+  while (1) {
+    try {
+      $self->loop->run;
+    } catch {
+      warn "Runloop failed: $_";
+      sleep 1;
+    }
   }
 }
 
