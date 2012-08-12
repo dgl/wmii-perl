@@ -103,7 +103,7 @@ sub run {
     } catch {
       warn "Runloop failed: $_";
       sleep 1;
-    }
+    };
   }
 }
 
