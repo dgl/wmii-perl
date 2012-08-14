@@ -49,6 +49,12 @@ sub BUILD {
     $self->dispatch("event_msg", @_);
   };
 
+  $SIG{HUP} = sub {
+    $self->dispatch("action_wmiirc");
+    warn "action_wmiirc failed";
+    exit 1;
+  };
+
   # Munge defaults to wmii ctl form
   my %ctl_config = %{$self->main_config};
   $ctl_config{grabmod} ||= $self->main_config->{modkey};
