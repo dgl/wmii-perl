@@ -15,7 +15,7 @@ with 'App::wmiirc::Role::Widget';
 
 sub BUILD {
   my($self) = @_;
-  $self->label("d");
+  $self->label("!");
 }
 
 sub widget_click {
@@ -44,7 +44,7 @@ sub widget_click {
   $self->{_active} = $process;
   close $pty;
 
-  my $eval = Eval::WithLexicals->new(
+  my $eval = Eval::WithLexicals->with_plugins("HintPersistence")->new(
     lexicals => {
       '$self' => \$self,
       '$core' => \$self->core,
