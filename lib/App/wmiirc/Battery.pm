@@ -42,7 +42,7 @@ sub BUILD {
     on_tick => sub {
       $self->render;
     },
-    reschedule => 'skip',
+    reschedule => 'drift',
   );
 
   $self->render;
