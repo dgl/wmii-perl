@@ -63,7 +63,7 @@ sub widget_click {
 
   given($button) {
     when(1) {
-      my $network = wimenu { name => "network:", history => "ssid" },
+      my $network = wimenu { name => "network:", history => "ssid", i => undef },
         map { /ESSID:"(.*)"/ ? $1 : () } qx{iwlist $config{device} scan};
       if(defined $network) {
         $network = "'$network'";

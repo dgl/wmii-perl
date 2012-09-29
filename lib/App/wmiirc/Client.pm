@@ -40,18 +40,14 @@ sub event_client_focus {
 
 sub key_list_clients(Modkey-slash) {
   my($self) = @_;
-  my @clients = map $self->clients->{$_}[2] . " ($_)",
+  my @clients = map { my $n = $self->clients->{$_}[2]; $n =~ s/!!//g; "$n!!$_" }
     grep defined $self->clients->{$_}[2], keys $self->clients;
 
-  # TODO: Stop showing the ID to the user somehow? Modify -S?
-  if(my $win = wimenu @clients) {
-    my($c) = $win =~ /\((0x[0-9a-f]+)\)$/;
-    if($c) {
-      my($tags) = wmiir "/client/$c/tags";
-      if($tags) {
-        wmiir "/ctl", "view $tags";
-        wmiir "/tag/sel/ctl", "select client $c";
-      }
+  if(my $win = wimenu { name => 'client', S => '!!', i => undef }, @clients) {
+    my($tags) = wmiir "/client/$win/tags";
+    if($tags) {
+      wmiir "/ctl", "view $tags";
+      wmiir "/tag/sel/ctl", "select client $win";
     }
   }
 }
