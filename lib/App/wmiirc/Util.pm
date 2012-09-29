@@ -84,7 +84,7 @@ sub wimenu {
     }
   }
   my $pid = open2 my($out_fh, $in_fh), "wimenu",
-    map +("-$_" => $opts{$_}), keys %opts;
+    map +("-$_" => $opts{$_} // () ), keys %opts;
   print $in_fh join("\n",
     @items && ref $items[0] eq 'ARRAY' ? @{$items[0]} : @items), "\n";
   close $in_fh;
