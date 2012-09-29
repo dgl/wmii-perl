@@ -54,6 +54,7 @@ sub action_done {
   open my $fh, '>>', "$ENV{HOME}/done" or die $!;
   print $fh "- ", (ref $self->{_doing} ? _format_line($self->{_doing}) : $self->{_doing}),
     " [$self->{_start_time}, ", time, "]\n";
+
   if(ref $self->{_doing}) {
     my @doing = @{$self->{_doing}};
     open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
@@ -73,12 +74,11 @@ sub action_done {
           }
         }
       }
-      # Not found
+      warn "Couldn't find item to remove\n";
       return 0;
     };
-    my $line = $gen_sub->($todos);
 
-    if($line) {
+    if(my $line = $gen_sub->($todos)) {
       open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
       open my $todo_out, '>', "$ENV{HOME}/.todo-new" or die $!;
       my $seen_line = 0;
@@ -98,8 +98,6 @@ sub action_done {
       close $todo_out or die $!;
       rename "$ENV{HOME}/todo", "$ENV{HOME}/.todo-bak";
       rename "$ENV{HOME}/.todo-new", "$ENV{HOME}/todo";
-    } else {
-      warn "Couldn't find item to remove\n";
     }
   }
   $self->_start_time(0);
