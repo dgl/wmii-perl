@@ -129,8 +129,14 @@ sub action_done {
 
 sub action_todo {
   my($self, $text) = @_;
-  open my $fh, '>>', "$ENV{HOME}/todo" or die $!;
-  print $fh "- $text\n";
+  if(!$text) {
+    if(!$self->core->dispatch("key_goto_regex", qr/^todo \(~\)/)) {
+      $self->core->dispatch("action_default", "~/todo");
+    }
+  } else {
+    open my $fh, '>>', "$ENV{HOME}/todo" or die $!;
+    print $fh "- $text\n";
+  }
 }
 
 sub widget_click {
@@ -152,9 +158,7 @@ sub widget_click {
       }
     }
     when(3) {
-      if(!$self->core->dispatch("key_goto_regex", qr/^todo \(~\)/)) {
-        $self->core->dispatch("action_default", "~/todo");
-      }
+      $self->action_todo;
     }
   }
 }
