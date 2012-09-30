@@ -145,14 +145,16 @@ sub widget_click {
           if($doing =~ m{(https?://\S+|\w+/\S+)}) {
             my $url = $1;
             $url =~ s/\W$//;
-            App::wmiirc::Dwim->action_default($url);
+            $self->core->dispatch("action_default", $url);
             last;
           }
         }
       }
     }
     when(3) {
-      App::wmiirc::Dwim->action_default("~/todo");
+      if(!$self->core->dispatch("key_goto_regex", qr/^todo \(~\)/)) {
+        $self->core->dispatch("action_default", "~/todo");
+      }
     }
   }
 }
@@ -223,3 +225,39 @@ sub _format_line {
 }
 
 1;
+__END__
+
+=head1 DESCRIPTION
+
+This is a fairly dumb todo list management thing, the main idea is to have a
+quick way of picking tasks and marking them as done.
+
+The todo list should look something like:
+
+  - wmii-perl
+    - Write todo plugin
+      - Documentation
+    - Fix something
+      Longer comment here
+
+When you invoke C<Mod4-a do> you will be given a list of the leaf nodes from the
+tree, i.e. in the above list I<Documentation> is the first option that will be
+given. Once an option is selected the wmii status bar will display it, then
+C<Mod4-a done> will mark it as done or C<Mod4-a do> will change what you are
+working on.
+
+=head2 Vim setup
+
+It's assumed you'll do most editing via your editor or other methods, but want
+wmii-perl to be able to edit the list too. Therefore this works best when your
+editor automatically saves and loads the todo file.
+
+With Vim something like the following in F<.vimrc> works nicely (you can
+probably delete the C<checkt> parts if you only use gvim):
+
+  au CursorHold,CursorHoldI ~/todo checkt | if &modified | write | endif
+  au CursorMoved,CursorMovedI ~/todo checkt
+  au InsertEnter ~/todo checkt
+  au BufRead ~/todo set ar aw
+
+=cut
