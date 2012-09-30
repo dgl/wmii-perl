@@ -110,6 +110,7 @@ sub run {
 sub dispatch {
   my($self, $event, @args) = @_;
 
+  my $ret;
   for my $module(grep /::$/, keys %App::wmiirc::) {
     my $class = "App::wmiirc::" . $module =~ s/::$//r;
     if($class->can($event)) {
@@ -118,10 +119,11 @@ sub dispatch {
       if(!ref $self->{cache}{$class}) {
         warn "Failed to instantiate $class\n";
       } else {
-        $self->{cache}{$class}->$event(@args);
+        $ret = $self->{cache}{$class}->$event(@args);
       }
     }
   }
+  $ret;
 }
 
 sub load {

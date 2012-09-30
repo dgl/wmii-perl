@@ -97,6 +97,7 @@ sub key_terminal_here(Modkey-Control-Return) {
 
 sub key_goto_regex {
   my($self, $regex) = @_;
+  my $found = 0;
 
   for my $c(keys %{$self->clients}) {
     my $cl = $self->clients->{$c};
@@ -108,9 +109,11 @@ sub key_goto_regex {
       my($tags) = wmiir "/client/$c/tags";
       wmiir "/ctl", "view $tags";
       wmiir "/tag/sel/ctl", "select client $c";
+      $found = 1;
       last;
     }
   }
+  $found;
 }
 
 1;
