@@ -10,7 +10,7 @@ has name => (
 
 has _doing => (
   is => 'rw',
-  default => sub { '' },
+  default => sub { undef },
 );
 
 has _start_time => (
@@ -27,6 +27,18 @@ sub BUILD {
   $self->label("?");
 }
 
+sub rewrite_todo(&) {
+  my($code) = @_;
+  open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
+  open my $todo_out, '>', "$ENV{HOME}/.todo-new" or die $!;
+  while(<$todo_in>) {
+    $code->($todo_out);
+  }
+  close $todo_in;
+  close $todo_out or die $!;
+  rename "$ENV{HOME}/.todo-new", "$ENV{HOME}/todo";
+}
+
 sub action_do {
   my $self = shift;
   my $text = "@_";
@@ -38,11 +50,27 @@ sub action_do {
     my @formatted_todos = map { _format_line($_) . "!!" . $i++ } @todos;
     $text = wimenu { name => "do", r => 10, S => '!!', i => undef }, @formatted_todos;
     return unless defined $text;
-    $self->_doing($todos[$text]);
-    $text = _format_line($self->_doing);
-    $text =~ s/\s+\[[^[]+\]$//;
+    if($todos[$text]) {
+      $self->_doing($todos[$text]);
+      $text = _format_line($self->_doing);
+      $text =~ s/\s+\[[^[]+\]$//;
+    } else {
+      $self->_doing($text);
+    }
   } else {
     $self->_doing($text);
+  }
+
+  if(!ref $self->{_doing}) {
+    $text ||= $self->{_doing};
+    rewrite_todo {
+      my($todo_out) = @_;
+      if($. == 1) {
+        print $todo_out "- $text\n";
+      }
+      print $todo_out $_;
+    };
+    $self->_doing([$text]);
   }
 
   $self->_start_time(time);
@@ -52,56 +80,50 @@ sub action_do {
 sub action_done {
   my($self) = @_;
   open my $fh, '>>', "$ENV{HOME}/done" or die $!;
-  print $fh "- ", (ref $self->{_doing} ? _format_line($self->{_doing}) : $self->{_doing}),
-    " [$self->{_start_time}, ", time, "]\n";
+  print $fh "- ", _format_line($self->{_doing})
+    . " [$self->{_start_time}, ", time, "]\n";
 
-  if(ref $self->{_doing}) {
-    my @doing = @{$self->{_doing}};
-    open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
-    my $todos = parse_todos($todo_in);
-    my $gen_sub; $gen_sub = sub {
-      my($todos) = @_;
-      for my $item(@$todos) {
-        if($item->[0] eq $doing[0]) {
-          shift @doing;
-          if(@doing) {
-            return $gen_sub->($item->[2]);
-          } elsif(@{$item->[2]}) {
-            warn "Still items below this\n";
-            return 0;
-          } else {
-            return $item->[1];
-          }
+  my @doing = @{$self->{_doing}};
+  open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
+  my $todos = parse_todos($todo_in);
+  my $gen_sub; $gen_sub = sub {
+    my($todos) = @_;
+    for my $item(@$todos) {
+      if($item->[0] eq $doing[0]) {
+        shift @doing;
+        if(@doing) {
+          return $gen_sub->($item->[2]);
+        } elsif(@{$item->[2]}) {
+          warn "Still items below this\n";
+          return 0;
+        } else {
+          return $item->[1];
         }
       }
-      warn "Couldn't find item to remove\n";
-      return 0;
-    };
+    }
+    warn "Couldn't find item to remove\n";
+    return 0;
+  };
 
-    if(my $line = $gen_sub->($todos)) {
-      open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
-      open my $todo_out, '>', "$ENV{HOME}/.todo-new" or die $!;
-      my $seen_line = 0;
-      while(<$todo_in>) {
-        if($. == $line) {
-          $seen_line = 1;
-        } elsif($seen_line) {
-          if(/^\s*-/) {
-            $seen_line = 0;
-            print $todo_out $_;
-          }
-        } else {
+  if(my $line = $gen_sub->($todos)) {
+    my $seen_line = 0;
+    rewrite_todo {
+      my($todo_out) = @_;
+
+      if($. == $line) {
+        $seen_line = 1;
+      } elsif($seen_line) {
+        if(/^\s*-/) {
+          $seen_line = 0;
           print $todo_out $_;
         }
+      } else {
+        print $todo_out $_;
       }
-      close $todo_in;
-      close $todo_out or die $!;
-      rename "$ENV{HOME}/todo", "$ENV{HOME}/.todo-bak";
-      rename "$ENV{HOME}/.todo-new", "$ENV{HOME}/todo";
-    }
+    };
   }
   $self->_start_time(0);
-  $self->_doing('');
+  $self->_doing(undef);
   $self->label("?");
 }
 
@@ -119,8 +141,7 @@ sub widget_click {
       if(!$self->{_doing}) {
         $self->action_do;
       } else {
-        for my $doing(ref $self->{_doing}
-            ? reverse @{$self->{_doing}} : $self->{_doing}) {
+        for my $doing(reverse @{$self->{_doing}}) {
           if($doing =~ m{(https?://\S+|\w+/\S+)}) {
             my $url = $1;
             $url =~ s/\W$//;
