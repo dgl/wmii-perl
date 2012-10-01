@@ -150,7 +150,7 @@ sub widget_click {
         my $ready = \ do{my $dummy};
         $weak_self->{loop}->add(
           $weak_self->{watcher} = IO::Async::Handle->new(
-            read_handle => $$fh,
+            read_handle => $fh->can("fileno") ? $fh : $$fh,
             on_read_ready => sub {
               $$ready = 1
             },
