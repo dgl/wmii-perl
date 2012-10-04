@@ -88,6 +88,7 @@ sub run {
 
       while($$buffref =~ s/^(.*\n)//) {
         my($event, @args) = split " ", $1;
+        next unless $event;
         # CamelCase -> camel_case
         $event =~ s/(?<=[a-z])([A-Z])/_$1/g;
         try {
