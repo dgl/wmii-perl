@@ -128,7 +128,8 @@ sub action_done {
 }
 
 sub action_todo {
-  my($self, $text) = @_;
+  my $self = shift;
+  my $text = "@_";
   if(!$text) {
     if(!$self->core->dispatch("key_goto_regex", qr/^todo \(~\)/)) {
       $self->core->dispatch("action_default", "~/todo");
