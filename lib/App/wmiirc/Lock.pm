@@ -25,6 +25,7 @@ sub BUILD {
       # TODO: Handle this
     },
   );
+  wmiir "/event", "SessionActive", "startup";
 }
 
 sub _handle {
