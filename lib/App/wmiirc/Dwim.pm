@@ -1,9 +1,21 @@
 # ABSTRACT: A default action that does something useful (hopefully)
 package App::wmiirc::Dwim;
+use Const::Fast;
+use Net::Async::HTTP;
 use User::pwent;
 use URI::Escape qw(uri_escape_utf8);
 use App::wmiirc::Plugin;
 with 'App::wmiirc::Role::Action';
+
+const my $SEARCH_DOMAIN_FINDER =>
+  'https://www.google.com/searchdomaincheck?format=url&type=wmii-perl';
+
+has search_domain => (
+  is => 'rw',
+  default => sub {
+    "https://www.google.com/",
+  },
+);
 
 my %aliases = config("alias", {});
 
@@ -14,6 +26,11 @@ for my $alias(keys %aliases) {
     my($self, @args) = @_;
     $self->action_default(sprintf $target, uri_escape_utf8 "@args");
   };
+}
+
+sub BUILD {
+  my($self) = @_;
+  $self->_search_domain;
 }
 
 sub action_xsel(Modkey-o) {
@@ -48,14 +65,48 @@ sub action_default {
     if(defined $host && exists $aliases{$host}) {
       system config("commands", "browser") . " '" .
           sprintf($aliases{$host}, uri_escape_utf8 "$rest@args") . "'&";
-    # TODO: Use IO::Async's lookup code for non-blocking here
-    } elsif($host =~ /^\S+:\d+/ || $host !~ / / && gethostbyname $host) {
-      system config("commands", "browser") . " 'http://$action'&";
     } else {
-      system config("commands", "browser") . " 'https://www.google.com/search?q="
-        . uri_escape_utf8(join " ", $action, @args) . "'&";
+      my $search = sub {
+        system config("commands", "browser") . " '" . $self->search_domain .
+            "search?q=" . uri_escape_utf8(join " ", $action, @args) . "'&";
+      };
+      my $browser = sub {
+        system config("commands", "browser") . " 'http://$action'&";
+      };
+
+      if($host =~ /^\S+:\d+/) {
+        $browser->();
+      } elsif($host !~ / /) {
+        $self->core->loop->resolver->getaddrinfo(
+          host => $host,
+          service => "http",
+          on_resolved => $browser,
+          on_error => $search);
+      } else {
+        $search->();
+      }
     }
   }
+}
+
+sub _search_domain {
+  my($self) = @_;
+
+  my $http = Net::Async::HTTP->new();
+  $self->core->loop->add($http);
+  $http->do_request(
+    uri => URI->new($SEARCH_DOMAIN_FINDER),
+    on_response => sub {
+      my($response) = @_;
+      $self->search_domain($response->content);
+      $self->core->loop->remove($http);
+    },
+    on_error => sub {
+      my($message) = @_;
+      warn "Couldn't fetch search domain: $message\n";
+      $self->core->loop->remove($http);
+    },
+ );
 }
 
 sub _getglob :lvalue {
