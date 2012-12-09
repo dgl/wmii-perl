@@ -104,6 +104,8 @@ sub run {
     }
   ));
 
+  wmiir "/event", "SessionActive", "startup";
+
   while (1) {
     try {
       $self->loop->run;

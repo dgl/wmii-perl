@@ -23,9 +23,9 @@ sub BUILD {
     },
     on_finish => sub {
       # TODO: Handle this
+      warn "Lost connection to screensaver";
     },
   );
-  wmiir "/event", "SessionActive", "startup";
 }
 
 sub _handle {
