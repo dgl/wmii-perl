@@ -1,6 +1,7 @@
 package App::wmiirc::Todo;
 use 5.014;
 use App::wmiirc::Plugin;
+use IO::Async::Timer::Periodic;
 use Fcntl qw(SEEK_SET);
 
 has name => (
@@ -18,13 +19,31 @@ has _start_time => (
   default => sub { 0 },
 );
 
+has _inactive_time => (
+  is => 'rw',
+  default => sub { 0 },
+);
+
+has _inactive_start => (
+  is => 'rw',
+  default => sub { 0 },
+);
+
 with 'App::wmiirc::Role::Action';
+with 'App::wmiirc::Role::Fade';
 with 'App::wmiirc::Role::Widget';
 
 
 sub BUILD {
   my($self) = @_;
-  $self->label("?");
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 60,
+    on_tick => sub {
+      $self->render;
+    },
+    reschedule => 'drift',
+  );
+  $self->render;
 }
 
 sub rewrite_todo(&) {
@@ -61,8 +80,8 @@ sub action_do {
     $self->_doing($text);
   }
 
-  if(!ref $self->{_doing}) {
-    $text ||= $self->{_doing};
+  if(!ref $self->_doing) {
+    $text ||= $self->_doing;
     rewrite_todo {
       my($todo_out) = @_;
       if($. == 1) {
@@ -74,16 +93,16 @@ sub action_do {
   }
 
   $self->_start_time(time);
-  $self->label($text);
+  $self->render;
 }
 
 sub action_done {
   my($self) = @_;
   open my $fh, '>>', "$ENV{HOME}/done" or die $!;
-  print $fh "- ", _format_line($self->{_doing})
+  print $fh "- ", _format_line($self->_doing)
     . " [$self->{_start_time}, ", time, "]\n";
 
-  my @doing = @{$self->{_doing}};
+  my @doing = @{$self->_doing};
   open my $todo_in, '<', "$ENV{HOME}/todo" or die $!;
   my $todos = parse_todos($todo_in);
   my $gen_sub; $gen_sub = sub {
@@ -124,7 +143,7 @@ sub action_done {
   }
   $self->_start_time(0);
   $self->_doing(undef);
-  $self->label("?");
+  $self->render;
 }
 
 sub action_todo {
@@ -140,15 +159,57 @@ sub action_todo {
   }
 }
 
+sub event_session_active {
+  my($self) = @_;
+  if($self->_inactive_start && $self->_start_time) {
+    $self->_inactive_start(0);
+    $self->_inactive_time($self->_inactive_time
+      + (time - $self->_inactive_start));
+  }
+}
+
+sub event_session_inactive {
+  my($self) = @_;
+  $self->_inactive_start(time);
+}
+
+sub render {
+  my($self) = @_;
+
+  if($self->_doing) {
+    # In case you're wondering it's an idea from:
+    # http://blog.fsck.com/2012/10/today.html
+    my $text = $self->_doing->[-1];
+    my $time = (time - $self->_start_time) - $self->_inactive_time;
+
+    if($time > 15*60) {
+      $text .= sprintf " [%dm]", $time / 60;
+    }
+
+    if($time > 20*60 && !$self->_inactive_start) {
+      my $t = 1 - ($time / (40*60));
+      $t = 0 if $t < 0;
+      $self->fade_set($t * $self->fade_count);
+    } else {
+      $self->fade_set($self->fade_count);
+    }
+
+    $self->label($text, $self->fade_current_color);
+  } else {
+    $self->fade_set($self->fade_count / 2);
+    $self->label("?", $self->fade_current_color);
+  }
+}
+
 sub widget_click {
   my($self, $button) = @_;
 
   given($button) {
     when(1) {
-      if(!$self->{_doing}) {
+      if(!$self->_doing) {
         $self->action_do;
       } else {
-        for my $doing(reverse @{$self->{_doing}}) {
+        for my $doing(reverse @{$self->_doing}) {
           if($doing =~ m{(https?://\S+|\w+/\S+)}) {
             my $url = $1;
             $url =~ s/\W$//;
