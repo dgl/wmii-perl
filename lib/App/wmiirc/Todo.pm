@@ -43,6 +43,8 @@ sub BUILD {
     },
     reschedule => 'drift',
   );
+  $timer->start;
+  $self->core->loop->add($timer);
   $self->render;
 }
 
