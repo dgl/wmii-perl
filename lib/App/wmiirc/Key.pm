@@ -98,15 +98,22 @@ sub key_action(Modkey-a) {
 my @progs;
 
 sub key_run(Modkey-p) {
-  my($self) = @_;
+  my($self, $terminal) = @_;
   if(!@progs) {
     $self->action_rehash(sub { $self->key_run });
     return;
   }
 
   if(my $run = wimenu { name => "run:", history => "progs" }, \@progs) {
-    system "$run &";
+    # Urgh, hacky
+    $run = "'$run'" if $terminal;
+    system +($terminal ? "$terminal -hold -e zsh -i -c " : "") . "$run &";
   }
+}
+
+sub key_run_terminal(Modkey-Shift-p) {
+  my($self) = @_;
+  $self->key_run($self->core->main_config->{terminal});
 }
 
 sub action_rehash {
