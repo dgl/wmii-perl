@@ -60,6 +60,7 @@ sub render {
 
   $self->label($text, $color);
 
+  $self->core->loop->remove($self->_timer) if $self->_timer;
   $self->core->loop->add($self->_timer(IO::Async::Timer::Absolute->new(
     time => $next,
     on_expire => sub {
