@@ -3,8 +3,13 @@ package App::wmiirc::Tag;
 use App::wmiirc::Plugin;
 with 'App::wmiirc::Role::Key';
 
-has last_tag => (
+has _last_tag => (
   is => 'rw'
+);
+
+has _urgent => (
+  is => 'rw',
+  default => sub { [] },
 );
 
 my %color;
@@ -43,12 +48,48 @@ sub event_focus_tag {
 
 sub event_unfocus_tag {
   my($self, $tag) = @_;
-  $self->last_tag($tag);
+  $self->_last_tag($tag);
   wmiir "/lbar/$tag", $color{norm};
+}
+
+sub event_urgent {
+  my($self, $id, $type) = @_;
+  push @{$self->_urgent}, $id;
+}
+
+sub key_urgent(Modkey-Shift-A) {
+  my($self) = @_;
+  my $id = $self->_urgent->[0];
+  return unless $id;
+  # TODO: This is duplicated from Client.pm, rationalise
+  my($tags) = wmiir "/client/$id/tags";
+  if($tags) {
+    wmiir "/ctl", "view $tags";
+    wmiir "/tag/sel/ctl", "select client $id";
+  }
+}
+
+sub event_not_urgent {
+  my($self, $id, $type) = @_;
+  $self->_urgent([grep $id ne $_, @{$self->_urgent}]);
 }
 
 sub event_urgent_tag {
   my($self, $type, $tag) = @_;
+  my($cur) = wmiir "/tag/sel/ctl";
+
+  # Avoid notifying for current window.
+  # This relies on the order of events from wmii :(
+  if($tag eq $cur) {
+    my($cur_id) = wmiir "/client/sel/ctl";
+    my $other = 0;
+    for my $id(@{$self->_urgent}) {
+      my($id, @items) = wmiir "/client/$id/ctl";
+      $other = 1 if $id ne $cur_id && grep /^urgent on/, @items;
+    }
+    return unless $other;
+  }
+
   wmiir "/lbar/$tag", $color{alert};
 }
 
@@ -124,7 +165,7 @@ sub key_retag_go_menu(Modkey-Shift-r) {
 
 sub key_tag_swap(Modkey-Tab) {
   my($self) = @_;
-  wmiir "/ctl", "view " .  $self->last_tag if $self->last_tag;
+  wmiir "/ctl", "view " .  $self->_last_tag if $self->_last_tag;
 }
 
 1;
