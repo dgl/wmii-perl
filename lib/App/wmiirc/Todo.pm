@@ -1,8 +1,9 @@
 package App::wmiirc::Todo;
 use 5.014;
 use App::wmiirc::Plugin;
-use IO::Async::Timer::Periodic;
 use Fcntl qw(SEEK_SET);
+use IO::Async::Timer::Periodic;
+use Scalar::Util qw(looks_like_number);
 
 has name => (
   is => 'ro',
@@ -71,7 +72,7 @@ sub action_do {
     my @formatted_todos = map { _format_line($_) . "!!" . $i++ } @todos;
     $text = wimenu { name => "do", r => 10, S => '!!', i => undef }, @formatted_todos;
     return unless defined $text;
-    if($todos[$text]) {
+    if(looks_like_number($text) && $todos[$text]) {
       $self->_doing($todos[$text]);
       $text = _format_line($self->_doing);
       $text =~ s/\s+\[[^[]+\]$//;
