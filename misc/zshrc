@@ -1,0 +1,46 @@
+# Some wmii-perl specific things you may wish to include in your zshrc.
+
+# Tell the client module the pid of the shell, so it can duplicate the cwd.
+if [[ -n $WMII_CONFPATH ]]; then
+  wmiir xwrite /event ShellWindowPid $(printf "0x%x" $WINDOWID) $$
+fi
+
+# The following implements a variation on: https://launchpad.net/undistract-me
+# combined with an Xterm title including the running command.
+case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen)
+   # WINCH trapped to workaround print being interrupted when a terminal is
+   # created and resized by wmii. Kinda hacky, but avoids a weird error.
+   local cmdstart curcmd
+   cmdstart=0
+
+   _curclient() {
+     echo $[$(wmiir read /client/sel/ctl | head -1)]
+   }
+
+   precmd () {
+     trap 'true' WINCH
+     print -Pn "\e]0;%m: %~\a"
+     # Did the last command take longer than 10 seconds?
+     if [ "$cmdstart" -gt 0 -a "$[$(date +%s) - $cmdstart]" -gt 10 ]; then
+       # Do we have a wmii instance we can talk to?
+       if [[ -n "$WINDOWID" ]] && [[ -n "$WMII_CONFPATH" ]] && \
+             wmiir ls /ctl &>/dev/null; then
+         if [[ $(_curclient) != $WINDOWID ]]; then
+           echo -ne '\a'
+           wmiir xwrite /event msg "done: $curcmd"
+         fi
+       else
+         # Just beep (e.g. for screen, urgentOnBell makes wmii pick this up).
+         echo -ne '\a'
+       fi
+     fi
+     trap - WINCH
+   }
+   preexec () {
+     # Don't break on commands.with line breaks
+     curcmd=${${${(pj:\\\\n:)${(f)1}}//\%/%%}//\\/\\\\}
+     cmdstart=$(date +%s)
+     print -Pn "\e]0;$curcmd (%m)\a"
+   }
+   ;;
+esac
