@@ -107,7 +107,8 @@ sub key_run(Modkey-p) {
   if(my $run = wimenu { name => "run:", history => "progs" }, \@progs) {
     # Urgh, hacky
     $run = "'$run'" if $terminal;
-    system +($terminal ? "$terminal -hold -e zsh -i -c " : "") . "$run &";
+    system +($terminal ? "$terminal -hold -e $ENV{SHELL} -i -c " : "")
+      . "$run &";
   }
 }
 
