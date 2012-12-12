@@ -8,8 +8,6 @@ fi
 # The following implements a variation on: https://launchpad.net/undistract-me
 # combined with an Xterm title including the running command.
 case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen)
-   # WINCH trapped to workaround print being interrupted when a terminal is
-   # created and resized by wmii. Kinda hacky, but avoids a weird error.
    local cmdstart curcmd
    cmdstart=0
 
@@ -18,6 +16,8 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen)
    }
 
    precmd () {
+     # WINCH trapped to workaround print being interrupted when a terminal is
+     # created and resized by wmii. Kinda hacky, but avoids a weird error.
      trap 'true' WINCH
      print -Pn "\e]0;%m: %~\a"
      # Did the last command take longer than 10 seconds?
@@ -36,6 +36,7 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen)
      fi
      trap - WINCH
    }
+
    preexec () {
      # Don't break on commands.with line breaks
      curcmd=${${${(pj:\\\\n:)${(f)1}}//\%/%%}//\\/\\\\}
