@@ -165,9 +165,9 @@ sub action_todo {
 sub event_session_active {
   my($self) = @_;
   if($self->_inactive_start && $self->_start_time) {
-    $self->_inactive_start(0);
     $self->_inactive_time($self->_inactive_time
       + (time - $self->_inactive_start));
+    $self->_inactive_start(0);
   }
 }
 
