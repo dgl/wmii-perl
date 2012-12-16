@@ -1,5 +1,7 @@
 package App::wmiirc::Lock;
 use App::wmiirc::Plugin;
+use IO::Async::Process;
+use Scalar::Util qw(weaken);
 with 'App::wmiirc::Role::Action';
 
 has state => (
@@ -7,25 +9,34 @@ has state => (
   default => sub { "unblank" },
 );
 
-sub BUILD {
-  my($self) = @_;
-
-  $self->core->loop->open_child(
-    command => [ "xscreensaver-command", "-watch" ],
-    stdout => {
-      on_read => sub {
-        my($stream, $buffref, $eof) = @_;
-        while($$buffref =~ s/^(\w+) .*\n// ) {
-          $self->_handle(lc $1);
-        }
-        return 0;
+has _child => (
+  is => 'rw',
+  default => sub {
+    my($self) = @_;
+    weaken $self;
+    my $child = IO::Async::Process->new(
+      command => [ "xscreensaver-command", "-watch" ],
+      stdout => {
+        on_read => sub {
+          my(undef, $buffref) = @_;
+          while($$buffref =~ s/^(\w+) .*\n// ) {
+            $self->_handle(lc $1);
+          }
+          return 0;
+        },
       },
-    },
-    on_finish => sub {
-      # TODO: Handle this
-      warn "Lost connection to screensaver";
-    },
-  );
+      on_finish => sub {
+        warn "Lost connection to screensaver";
+      },
+    );
+    $self->core->loop->add($child);
+    $child;
+  }
+);
+
+sub DESTROY {
+  my($self) = @_;
+  $self->_child->kill("TERM");
 }
 
 sub _handle {
