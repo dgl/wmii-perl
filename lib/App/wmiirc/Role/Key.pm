@@ -3,6 +3,7 @@ package App::wmiirc::Role::Key;
 use 5.014;
 use Moo::Role;
 use App::wmiirc::Util;
+use Scalar::Util ();
 
 my %config = config("keys", {
   Modkey => scalar(config("config", "modkey", "Mod4")),
@@ -22,7 +23,9 @@ sub _getstash {
 sub BUILD {}
 after BUILD => sub {
   my($self) = @_;
-  state %keys;
+  # TODO: Support this properly rather than messing with core from a role.
+  my %keys = %{$self->core->_keys};
+  Scalar::Util::weaken($self);
 
   # Apologies, I seem to have invented yet another awful mini domain specific
   # language here.
@@ -63,11 +66,11 @@ after BUILD => sub {
   }
 
   if($App::wmiirc::DEBUG) {
-    require Data::Dumper; print Data::Dumper::Dumper(\%keys);
+    require Data::Dump; Data::Dump::pp(\%keys);
   }
 
   wmiir "/keys", keys %keys;
-  $self->core->{keys} = \%keys;
+  $self->core->_keys(\%keys);
 };
 
 1;

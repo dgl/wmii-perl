@@ -30,8 +30,8 @@ sub BUILD {
 sub event_key {
   my($self, $key) = @_;
 
-  if(exists $self->core->{keys}{$key}) {
-    $self->core->{keys}{$key}->();
+  if(exists $self->core->_keys->{$key}) {
+    $self->core->_keys->{$key}->();
   }
 }
 
@@ -82,15 +82,15 @@ sub key_close(Modkey-Shift-c) {
 sub key_action(Modkey-a) {
   my($self, @opts) = @_;
   my $menu = wimenu { name => "action:", history => "actions" },
-      sort grep !/^default$/, keys $self->core->{actions};
+      sort grep !/^default$/, keys $self->core->_actions;
   return unless defined $menu;
   my($action, @args) = @opts ? @opts : split / /, $menu;
 
   if($action) {
-    if(exists $self->core->{actions}{$action}) {
-      $self->core->{actions}{$action}->(@args);
-    } elsif(exists $self->core->{actions}{default}) {
-      $self->core->{actions}{default}->($action, @args);
+    if(exists $self->core->_actions->{$action}) {
+      $self->core->_actions->{$action}->(@args);
+    } elsif(exists $self->core->_actions->{default}) {
+      $self->core->_actions->{default}->($action, @args);
     }
   }
 }
@@ -141,6 +141,13 @@ sub action_rehash {
 
 sub action_wmiirc {
   my($self, $cmd) = @_;
+
+  # Force everything not in use to be destroyed.
+  $SIG{HUP} = $SIG{__WARN__} = 'IGNORE';
+  delete $self->core->{_actions};
+  delete $self->core->{_keys};
+  delete $self->core->{_cache};
+
   exec $cmd || ($^X, $0);
 }
 

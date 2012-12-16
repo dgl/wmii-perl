@@ -87,7 +87,7 @@ sub widget_click {
 
   sub mod {
     my($core, $module) = @_;
-    return $core->{cache}{"App::wmiirc::\u$module"};
+    return $core->_cache->{"App::wmiirc::\u$module"};
   }
 }
 

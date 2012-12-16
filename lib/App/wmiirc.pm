@@ -41,6 +41,22 @@ has main_config => (
   }
 );
 
+has _actions => (
+  is => 'ro',
+  default => sub { +{} },
+);
+
+has _cache => (
+  is => 'ro',
+  default => sub { +{} },
+);
+
+has _keys => (
+  is => 'rw',
+  default => sub { +{} },
+);
+
+
 sub BUILD {
   my($self) = @_;
 
@@ -124,11 +140,11 @@ sub dispatch {
     my $class = "App::wmiirc::" . $module =~ s/::$//r;
     if($class->can($event)) {
       print STDERR "Dispatch: $event (@args) to $class\n" if $DEBUG;
-      $self->{cache}{$class} ||= $self->load($class);
-      if(!ref $self->{cache}{$class}) {
+      $self->{_cache}{$class} ||= $self->load($class);
+      if(!ref $self->{_cache}{$class}) {
         warn "Failed to instantiate $class\n";
       } else {
-        $ret = $self->{cache}{$class}->$event(@args);
+        $ret = $self->{_cache}{$class}->$event(@args);
       }
     }
   }
@@ -144,7 +160,7 @@ sub load {
     # Make it so a bad module doesn't kill the whole thing and can usually be
     # recovered from with a simple Modkey-a wmiirc.
     require $file;
-    $self->{cache}{$class} = $class->new(core => $self);
+    $self->{_cache}{$class} = $class->new(core => $self);
   } catch {
     warn "Failed to load $class: $_";
   }
