@@ -79,36 +79,36 @@ sub BUILD {
 sub run {
   my($self) = @_;
 
-  $self->loop->add(IO::Async::Stream->new(
-    read_handle => do {
-      open my $event_fh, "-|", "wmiir", "read", "/event" or die $!; $event_fh;
-    },
-    on_read => sub {
-      my(undef, $buffref, $eof) = @_;
+  $self->loop->open_child(
+    command => [qw(wmiir read /event)],
+    stdout => {
+      on_read => sub {
+        my(undef, $buffref) = @_;
 
-      while($$buffref =~ s/^(.*\n)//) {
-        my($event, @args) = split " ", $1;
-        next unless $event;
-        # CamelCase -> camel_case
-        $event =~ s/(?<=[a-z])([A-Z])/_$1/g;
-        try {
-          $self->dispatch(lc "event_$event", @args);
-        } catch {
-          warn "Dispatch failed: $_";
+        while($$buffref =~ s/^(.*\n)//) {
+          my($event, @args) = split " ", $1;
+          next unless $event;
+          # CamelCase -> camel_case
+          $event =~ s/(?<=[a-z])([A-Z])/_$1/g;
+          try {
+            $self->dispatch(lc "event_$event", @args);
+          } catch {
+            warn "Dispatch failed: $_";
+          }
         }
       }
-
-      $self->loop->stop(1) if $eof;
-
-      return 0;
+    },
+    on_finish => sub {
+      $self->loop->stop(1);
     }
-  ));
+  );
 
   wmiir "/event", "SessionActive", "startup";
 
-  while (1) {
+  my $stopped = 0;
+  while (!$stopped) {
     try {
-      $self->loop->run;
+      $stopped = $self->loop->run;
     } catch {
       warn "Runloop failed: $_";
       sleep 1;
