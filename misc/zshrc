@@ -41,7 +41,7 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen)
      # Don't break on commands.with line breaks
      curcmd=${${${(pj:\\\\n:)${(f)1}}//\%/%%}//\\/\\\\}
      cmdstart=$(date +%s)
-     print -Pn "\e]0;$curcmd (%m)\a"
+     print -Pn "\e]0;$curcmd (%m: %~)\a"
    }
    ;;
 esac
