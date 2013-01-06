@@ -119,8 +119,6 @@ sub run {
     }
   );
 
-  wmiir "/event", "SessionActive", "startup";
-
   my $stopped = 0;
   while (!$stopped) {
     try {

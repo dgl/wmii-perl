@@ -1,6 +1,7 @@
 package App::wmiirc::Lock;
 use App::wmiirc::Plugin;
 use IO::Async::Process;
+use IO::Async::Timer::Countdown;
 use Scalar::Util qw(weaken);
 with 'App::wmiirc::Role::Action';
 
@@ -33,6 +34,19 @@ has _child => (
     $child;
   }
 );
+
+sub BUILD {
+  my($self) = @_;
+  my $timer = IO::Async::Timer::Countdown->new(
+    delay => 1,
+    remove_on_expire => 1,
+    on_expire => sub {
+      wmiir "/event", "SessionActive startup";
+    },
+  );
+  $timer->start;
+  $self->core->loop->add($timer);
+}
 
 sub DESTROY {
   my($self) = @_;
