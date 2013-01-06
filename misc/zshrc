@@ -27,7 +27,7 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen)
              wmiir ls /ctl &>/dev/null; then
          if [[ $(_curclient) != $WINDOWID ]]; then
            echo -ne '\a'
-           wmiir xwrite /event msg "done: $curcmd"
+           wmiir xwrite /event CommandDone $$ "done: $curcmd"
          fi
        else
          # Just beep (e.g. for screen, urgentOnBell makes wmii pick this up).

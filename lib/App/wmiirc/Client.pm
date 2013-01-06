@@ -12,6 +12,10 @@ has previous_id => (
   is => 'rw'
 );
 
+has _last_destroyed_ppid => (
+  is => 'rw',
+);
+
 sub BUILD {
   my($self) = @_;
 
@@ -27,6 +31,9 @@ sub event_create_client {
   my $props = wmiir "/client/$id/props";
   return unless $props;
   $self->clients->{$id} = [split /:/, $props, 3];
+  if(my($pid) = map /(\d+)/, grep /^pid /, wmiir "/client/$id/ctl") {
+    @{$self->clients->{$id}}[4, 5] = ($pid, 0+`ps --pid=$pid ho ppid`);
+  }
 }
 
 sub event_client_focus {
@@ -40,6 +47,7 @@ sub event_client_focus {
 
 sub key_list_clients(Modkey-slash) {
   my($self) = @_;
+  return unless %{$self->clients};
   my @clients = map { my $n = $self->clients->{$_}[2]; $n =~ s/!!//g; "$n!!$_" }
     grep defined $self->clients->{$_}[2], keys $self->clients;
 
@@ -65,9 +73,18 @@ sub event_shell_window_pid {
   $self->clients->{$id}[3] = $pid;
 }
 
+sub event_command_done {
+  my($self, $pid, @msg) = @_;
+  if(!$self->_last_destroyed_ppid or $pid != $self->_last_destroyed_ppid) {
+    $self->core->dispatch("event_msg", "@msg");
+  }
+}
+
 sub event_destroy_client {
   my($self, $id) = @_;
   $self->previous_id(undef) if $self->previous_id && $self->previous_id eq $id;
+  $self->_last_destroyed_ppid($self->clients->{$id}[5]);
+
   delete $self->clients->{$id};
 }
 
@@ -80,6 +97,7 @@ sub key_terminal_here(Modkey-Control-Return) {
   my($cur_id, @items) = wmiir "/client/sel/ctl";
   my $pid = $self->clients->{$cur_id // ""}[3] ||
     (map /(\d+)/, grep /^pid /, @items)[0];
+  return unless $pid;
   my $fork = fork;
   return if $fork || not defined $fork;
   if(-d "/proc/$pid/cwd") {
