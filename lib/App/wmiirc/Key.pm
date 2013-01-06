@@ -45,6 +45,11 @@ sub key_select_move(Modkey-Shift-DIR) {
   wmiir "/tag/sel/ctl", "send sel $dir";
 }
 
+sub key_select_stack(Modkey-Control-DIR) {
+  my(undef, $dir) = @_;
+  wmiir "/tag/sel/ctl", "select $dir stack";
+}
+
 sub key_floating(Modkey-space) {
   wmiir "/tag/sel/ctl", "select toggle";
 }
