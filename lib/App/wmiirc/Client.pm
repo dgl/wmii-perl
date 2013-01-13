@@ -100,7 +100,24 @@ sub key_terminal_here(Modkey-Control-Return) {
   return unless $pid;
   my $fork = fork;
   return if $fork || not defined $fork;
-  if(-d "/proc/$pid/cwd") {
+  if(readlink("/proc/$pid/exe") =~ m{/ssh$}) {
+    open my $cmd_fh, "<", "/proc/$pid/cmdline";
+    my $cmd = join " ", <$cmd_fh>;
+    $cmd =~ s/\0/ /g;
+    my($host) = $cmd =~ /ssh\s+(?:-\S+\s+)*(\S+)/;
+    if(!$host) {
+      warn "Unable to figure out hostname\n";
+      exit 1;
+    }
+    my($title) = wmiir "/client/sel/label";
+    my($dir) = $title =~ m{(?:^|\()(?:\w+: )?([~/].*?)(?:$|\))};
+    $dir ||= "~";
+    exec $self->core->main_config->{terminal}, qw(-name URxvtSsh -e zsh -i -c),
+      qq{exec ssh -t $host 'cd $dir; exec \$SHELL'};
+    no warnings 'exec';
+    warn "Exec failed: $?";
+    exit 1;
+  } elsif(-d "/proc/$pid/cwd") {
     chdir "/proc/$pid/cwd";
   } else {
     # No /proc, try lsof

@@ -25,7 +25,7 @@ sub action_ssh {
 
   if(my $host = @args ? "@args"
       : wimenu { name => "host:", history => "ssh" }, \@hosts) {
-    system $self->core->main_config->{terminal} . " -e ssh $host &";
+    system $self->core->main_config->{terminal} . " -name URxvtSsh -e zsh -i -c 'exec ssh $host' &";
   }
 }
 
