@@ -92,7 +92,7 @@ sub action_default {
 sub _search_domain {
   my($self) = @_;
 
-  my $http = Net::Async::HTTP->new();
+  my $http = Net::Async::HTTP->new;
   $self->core->loop->add($http);
   $http->do_request(
     uri => URI->new($SEARCH_DOMAIN_FINDER),
