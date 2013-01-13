@@ -35,39 +35,41 @@ sub event_key {
   }
 }
 
+sub tag { wmiir "/tag/sel/ctl", @_ }
+
 sub key_select(Modkey-DIR) {
   my(undef, $dir) = @_;
-  wmiir "/tag/sel/ctl", "select $dir";
+  tag "select $dir";
 }
 
 sub key_select_move(Modkey-Shift-DIR) {
   my(undef, $dir) = @_;
-  wmiir "/tag/sel/ctl", "send sel $dir";
+  tag "send sel $dir";
 }
 
 sub key_select_stack(Modkey-Control-DIR) {
   my(undef, $dir) = @_;
-  wmiir "/tag/sel/ctl", "select $dir stack";
+  tag "select $dir stack";
 }
 
 sub key_floating(Modkey-space) {
-  wmiir "/tag/sel/ctl", "select toggle";
+  tag "select toggle";
 }
 
 sub key_floating_toggle(Modkey-Shift-space) {
-  wmiir "/tag/sel/ctl", "send sel toggle";
+  tag "send sel toggle";
 }
 
 sub key_colmode_default(Modkey-d) {
-  wmiir "/tag/sel/ctl", "colmode sel default-max";
+  tag "colmode sel default-max";
 }
 
 sub key_colmode_stack(Modkey-s) {
-  wmiir "/tag/sel/ctl", "colmode sel stack-max";
+  tag "colmode sel stack-max";
 }
 
 sub key_colmode_max(Modkey-m) {
-  wmiir "/tag/sel/ctl", "colmode sel stack+max";
+  tag "colmode sel stack+max";
 }
 
 sub key_fullscreen(Modkey-f) {
