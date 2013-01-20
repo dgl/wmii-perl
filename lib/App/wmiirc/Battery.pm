@@ -1,4 +1,5 @@
 package App::wmiirc::Battery;
+use 5.014;
 use App::wmiirc::Plugin;
 use Const::Fast;
 use IO::Async::Timer::Periodic 0.50;

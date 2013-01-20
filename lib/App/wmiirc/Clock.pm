@@ -1,4 +1,5 @@
 package App::wmiirc::Clock;
+use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Timer::Absolute;
 use POSIX qw(strftime);

@@ -1,4 +1,5 @@
 package App::wmiirc::Lock;
+use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Process;
 use IO::Async::Timer::Countdown;
@@ -12,6 +13,7 @@ has state => (
 
 has _child => (
   is => 'rw',
+  lazy => 1,
   default => sub {
     my($self) = @_;
     weaken $self;
@@ -37,6 +39,7 @@ has _child => (
 
 sub BUILD {
   my($self) = @_;
+  $self->_child;
   my $timer = IO::Async::Timer::Countdown->new(
     delay => 1,
     remove_on_expire => 1,
