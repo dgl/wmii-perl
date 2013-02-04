@@ -1,6 +1,7 @@
 package App::wmiirc::Client;
 # ABSTRACT: Keep track of clients
 use App::wmiirc::Plugin;
+use JSON;
 with 'App::wmiirc::Role::Key';
 
 has clients => (
@@ -45,13 +46,58 @@ sub event_client_focus {
   $self->previous_id($id);
 }
 
+sub list_chrome_tabs {
+  my($self) = @_;
+  my $s = IO::Socket::UNIX->new("/tmp/ch-$ENV{USER}") or return;
+  eval {
+    print $s to_json({t => "windows"}), "\n";
+    my $windows = from_json(<$s>)->{data};
+    for my $win(@$windows) {
+      print $s to_json({t => "tabs", windowId => $win->{id} }), "\n";
+      $win->{tabs} = from_json(<$s>)->{data};
+    }
+
+    return $windows;
+  };
+}
+
 sub key_list_clients(Modkey-slash) {
   my($self) = @_;
   return unless %{$self->clients};
+
+  # Update with current window
+  my($cur_id) = wmiir "/client/sel/ctl";
+  my $props = wmiir "/client/$cur_id/props";
+  @{$self->clients->{$cur_id}}[0..2] = split /:/, $props, 3;
+
   my @clients = map { my $n = $self->clients->{$_}[2]; $n =~ s/!!//g; "$n!!$_" }
     grep defined $self->clients->{$_}[2], keys $self->clients;
 
+  my $chrome_windows = $self->list_chrome_tabs;
+  my %cr_id_map;
+  for my $win(@$chrome_windows) {
+    for my $tab(@{$win->{tabs}}) {
+      if($tab->{active}) {
+        # Urgh.
+        my @ids = grep { $self->clients->{$_}[2] =~
+          /\Q$tab->{title}\E - (?:Chromium|Google Chrome)$/ }
+          keys $self->clients;
+        next if !@ids || @ids > 1; # Better way to handle this?
+        @clients = grep !/!!$ids[0]$/, @clients;
+        $cr_id_map{$win->{id}} = $ids[0];
+      }
+      push @clients, $tab->{title} . '!!cr:' . $win->{id} . ':' . $tab->{id};
+    }
+  }
+
   if(my $win = wimenu { name => 'client', S => '!!', i => undef }, @clients) {
+    if($win =~ /^cr:(\d+):(\d+)/) {
+      $win = $cr_id_map{$1};
+      my $tab = 0+$2;
+      my $s = IO::Socket::UNIX->new("/tmp/ch-$ENV{USER}") or return;
+      print $s to_json({t => "focus", tabId => $tab}), "\n";
+    }
+
     my($tags) = wmiir "/client/$win/tags";
     if($tags) {
       wmiir "/ctl", "view $tags";
