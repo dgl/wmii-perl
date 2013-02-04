@@ -48,7 +48,8 @@ sub render {
     my($ap) = $info =~ /Access Point: (.*?)$/m;
 
     my $unassociated = $ap =~ /:/ ? "" : " [N/A]";
-    $self->label($off ? "." : "$essid (${rate}M)$unassociated");
+    $rate = $rate ? "${rate}M" : "?";
+    $self->label($off ? "." : "$essid ($rate)$unassociated");
   } else {
     my($gateway) = qx{ip route show 0/0 dev $config{device}} =~ m{via (\S+)};
     my($ip) = qx{ip addr show dev $config{device} scope global} =~ m{inet ([^/]+)};
