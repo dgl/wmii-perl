@@ -91,7 +91,9 @@ sub key_action(Modkey-a) {
   my $menu = wimenu { name => "action:", history => "actions" },
       sort grep !/^default$/, keys $self->core->_actions;
   return unless defined $menu;
-  my($action, @args) = @opts ? @opts : split / /, $menu;
+  my @menu = split / /, $menu;
+  my($action, @args) = @opts ? ($menu[0], @opts,
+	  @menu > 1 ? $menu[1 .. $#menu] : ()) : @menu;
 
   if($action) {
     if(exists $self->core->_actions->{$action}) {

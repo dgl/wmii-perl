@@ -40,6 +40,13 @@ sub action_xsel(Modkey-o) {
   $self->action_default($selection, @args);
 }
 
+sub action_xsel_action(Modkey-Shift-o) {
+  my($self, @args) = @_;
+  open my $fh, "-|", "xsel", "-o";
+  my $selection = join "", <$fh>;
+  $self->core->dispatch("key_action", $selection);
+}
+
 sub action_default {
   my($self, $action, @args) = @_;
 
@@ -71,7 +78,8 @@ sub action_default {
             "search?q=" . uri_escape_utf8(join " ", $action, @args) . "'&";
       };
       my $browser = sub {
-        system config("commands", "browser") . " 'http://$action'&";
+        system config("commands", "browser") . " 'http://$action"
+	  . (@args ? "/" . uri_escape_utf8("@args") : "") . "'&";
       };
 
       if($host =~ /^\S+:\d+/) {
