@@ -59,6 +59,15 @@ sub event_notice {
   }
 }
 
+sub key_msg_go(Modkey-g) {
+  my($self) = @_;
+  if($self->label =~ m{(https?://\S+|\w+/\S+)}) {
+    my $url = $1;
+    $url =~ s/\W$//;
+    $self->core->dispatch("action_default", $url);
+  }
+}
+
 sub widget_click {
   my($self, $button) = @_;
   $self->label(" ");

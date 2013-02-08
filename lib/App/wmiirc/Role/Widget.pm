@@ -15,6 +15,9 @@ before BUILD => sub {
 
 sub label {
   my($self, $text, $color) = @_;
+  if(not defined $text) {
+    return +(map s/^label //r, grep /^label /, wmiir "/rbar/" . $self->name)[0];
+  }
 
   $color //= $self->core->main_config->{normcolors};
 
