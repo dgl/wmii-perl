@@ -33,7 +33,9 @@ sub event_create_client {
   return unless $props;
   $self->clients->{$id} = [split /:/, $props, 3];
   if(my($pid) = map /(\d+)/, grep /^pid /, wmiir "/client/$id/ctl") {
-    @{$self->clients->{$id}}[4, 5] = ($pid, 0+`ps --pid=$pid ho ppid`);
+    my $ppid = `ps --pid=$pid ho ppid`;
+    $ppid = 0 + $ppid if $ppid;
+    @{$self->clients->{$id}}[4, 5] = ($pid, $ppid);
   }
 }
 
@@ -68,7 +70,7 @@ sub key_list_clients(Modkey-slash) {
   # Update with current window
   my($cur_id) = wmiir "/client/sel/ctl";
   my $props = wmiir "/client/$cur_id/props";
-  @{$self->clients->{$cur_id}}[0..2] = split /:/, $props, 3;
+  @{$self->clients->{$cur_id}}[0..2] = split /:/, $props, 3 if $props;
 
   my @clients = map { my $n = $self->clients->{$_}[2]; $n =~ s/!!//g; "$n!!$_" }
     grep defined $self->clients->{$_}[2], keys $self->clients;
