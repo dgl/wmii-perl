@@ -113,8 +113,9 @@ sub key_run(Modkey-p) {
 
   if(my $run = wimenu { name => "run:", history => "progs" }, \@progs) {
     # Urgh, hacky
+    my($prog) = $run =~ /(\S+)/;
     $run = "'$run'" if $terminal;
-    system +($terminal ? "$terminal -hold -e $ENV{SHELL} -i -c " : "")
+    system +($terminal ? "$terminal -hold -title '$prog' -e $ENV{SHELL} -i -c " : "")
       . "$run &";
   }
 }
