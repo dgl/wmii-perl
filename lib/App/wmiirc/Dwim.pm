@@ -71,7 +71,8 @@ sub action_default {
 
     if(defined $host && exists $aliases{$host}) {
       system config("commands", "browser") . " '" .
-          sprintf($aliases{$host}, uri_escape_utf8 "$rest@args") . "'&";
+        sprintf($aliases{$host}, ($aliases{$host} =~ /\?/ ?
+          uri_escape_utf8 "$rest@args" : "$rest@args")) . "'&";
     } else {
       my $search = sub {
         system config("commands", "browser") . " '" . $self->search_domain .
@@ -79,7 +80,7 @@ sub action_default {
       };
       my $browser = sub {
         system config("commands", "browser") . " 'http://$action"
-	  . (@args ? "/" . uri_escape_utf8("@args") : "") . "'&";
+          . (@args ? "/" . uri_escape_utf8("@args") : "") . "'&";
       };
 
       if($host =~ /^\S+:\d+/) {
