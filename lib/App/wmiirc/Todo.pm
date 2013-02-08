@@ -38,7 +38,7 @@ with 'App::wmiirc::Role::Widget';
 sub BUILD {
   my($self) = @_;
   my $timer = IO::Async::Timer::Periodic->new(
-    interval => 60,
+    interval => 30,
     on_tick => sub {
       $self->render;
     },
