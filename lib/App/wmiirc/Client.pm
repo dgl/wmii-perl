@@ -72,8 +72,10 @@ sub key_list_clients(Modkey-slash) {
   my $props = wmiir "/client/$cur_id/props";
   @{$self->clients->{$cur_id}}[0..2] = split /:/, $props, 3 if $props;
 
-  my @clients = map { my $n = $self->clients->{$_}[2]; $n =~ s/!!//g; "$n!!$_" }
-    grep defined $self->clients->{$_}[2], keys $self->clients;
+  my @clients = map {
+    my $n = $self->clients->{$_}[2];
+    $n =~ s/`!//g; "$n`!$_"
+  } grep defined $self->clients->{$_}[2], keys $self->clients;
 
   my $chrome_windows = $self->list_chrome_tabs;
   my %cr_id_map;
@@ -85,14 +87,14 @@ sub key_list_clients(Modkey-slash) {
           /\Q$tab->{title}\E - (?:Chromium|Google Chrome)$/ }
           keys $self->clients;
         next if !@ids || @ids > 1; # Better way to handle this?
-        @clients = grep !/!!$ids[0]$/, @clients;
+        @clients = grep !/`!$ids[0]$/, @clients;
         $cr_id_map{$win->{id}} = $ids[0];
       }
-      push @clients, $tab->{title} . '!!cr:' . $win->{id} . ':' . $tab->{id};
+      push @clients, $tab->{title} . '`!cr:' . $win->{id} . ':' . $tab->{id};
     }
   }
 
-  if(my $win = wimenu { name => 'client', S => '!!', i => undef }, @clients) {
+  if(my $win = wimenu { name => 'client', S => '`!', i => undef }, @clients) {
     if($win =~ /^cr:(\d+):(\d+)/) {
       $win = $cr_id_map{$1};
       my $tab = 0+$2;
@@ -100,6 +102,7 @@ sub key_list_clients(Modkey-slash) {
       print $s to_json({t => "focus", tabId => $tab}), "\n";
     }
 
+    return unless $win;
     my($tags) = wmiir "/client/$win/tags";
     if($tags) {
       wmiir "/ctl", "view $tags";

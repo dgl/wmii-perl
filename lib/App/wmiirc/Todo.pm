@@ -69,8 +69,8 @@ sub action_do {
     open my $fh, '<', "$ENV{HOME}/todo" or die $!;
     my $i = 0;
     my @todos = order_todos($fh);
-    my @formatted_todos = map { _format_line($_) . "!!" . $i++ } @todos;
-    $text = wimenu { name => "do", r => 10, S => '!!', i => undef }, @formatted_todos;
+    my @formatted_todos = map { _format_line($_) . "`!" . $i++ } @todos;
+    $text = wimenu { name => "do", r => 10, S => '`!', i => undef }, @formatted_todos;
     return unless defined $text;
     if(looks_like_number($text) && $todos[$text]) {
       $self->_doing($todos[$text]);
