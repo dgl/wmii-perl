@@ -65,12 +65,17 @@ sub action_do {
   my $self = shift;
   my $text = "@_";
 
-  if(!$text) {
+  if(ref $_[0] || !$text) {
     open my $fh, '<', "$ENV{HOME}/todo" or die $!;
     my $i = 0;
     my @todos = order_todos($fh);
     my @formatted_todos = map { _format_line($_) . "`!" . $i++ } @todos;
-    $text = wimenu { name => "do", r => 10, S => '`!', i => undef }, @formatted_todos;
+    unless(ref $_[0]) {
+      $text = wimenu { name => "do", r => 10, S => '`!', i => undef },
+        @formatted_todos;
+    } else {
+      $text = ${$_[0]};
+    }
     return unless defined $text;
     if(looks_like_number($text) && $todos[$text]) {
       $self->_doing($todos[$text]);
@@ -146,6 +151,9 @@ sub action_done {
   }
   $self->_start_time(0);
   $self->_doing(undef);
+  if(config("todo", "mode", "") eq "work") {
+    $self->action_do(\0);
+  }
   $self->render;
 }
 
@@ -199,7 +207,9 @@ sub render {
 
     $self->label($text, $self->fade_current_color);
   } else {
-    $self->fade_set($self->fade_count / 2);
+    $self->fade_set(config("todo", "mode", "") eq "work"
+      ? $self->fade_count / 2
+      : $self->fade_count);
     $self->label("?", $self->fade_current_color);
   }
 }
