@@ -80,7 +80,7 @@ sub action_default {
       };
       my $browser = sub {
         system config("commands", "browser") . " 'http://$action"
-          . (@args ? "/" . uri_escape_utf8("@args") : "") . "'&";
+          . (@args ? "/" . "@args" : "") . "'&";
       };
 
       if($host =~ /^\S+:\d+/) {
