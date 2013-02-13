@@ -1,0 +1,1 @@
+urxvtc -title "man $*" -e zsh -i -c 'man "$@"' - "$@"

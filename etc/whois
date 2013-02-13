@@ -1,0 +1,4 @@
+# Works well with dwim plugin, select IP/domain, Mod4-O whois
+
+# Remove http:// prefix from Chrome
+urxvtc -hold -title whois -e zsh -i -c 'whois $1' - "$(echo "$@" | sed 's!^http://!!')"
