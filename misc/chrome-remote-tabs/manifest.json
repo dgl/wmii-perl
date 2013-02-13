@@ -1,0 +1,13 @@
+{
+  "name": "Remote tab control",
+  "version": "0.1",
+  "manifest_version": 2,
+  "description": "Get list of windows and tabs, change to them over a unix domain socket (with an external helper app).",
+  "background": {
+    "scripts": ["server.js"]
+  },
+  "permissions": [
+    "tabs",
+    "bookmarks"
+  ]
+}
