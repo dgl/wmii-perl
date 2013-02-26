@@ -56,9 +56,20 @@ sub rewrite_todo(&) {
   while(<$todo_in>) {
     $code->($todo_out);
   }
+  if(!defined $.) {
+    $_ = "";
+    $code->($todo_out);
+  }
   close $todo_in;
   close $todo_out or die $!;
-  rename "$ENV{HOME}/.todo-new", "$ENV{HOME}/todo";
+  open $todo_in, '<', "$ENV{HOME}/.todo-new" or die $!;
+  open $todo_out, '>', "$ENV{HOME}/todo" or die $!;
+  while(<$todo_in>) {
+    print $todo_out $_;
+  }
+  close $todo_in;
+  close $todo_out or die $!;
+  unlink "$ENV{HOME}/.todo-new";
 }
 
 sub action_do {
@@ -92,7 +103,7 @@ sub action_do {
     $text ||= $self->_doing;
     rewrite_todo {
       my($todo_out) = @_;
-      if($. == 1) {
+      if($. == 0 || $. == 1) {
         print $todo_out "- $text\n";
       }
       print $todo_out $_;
