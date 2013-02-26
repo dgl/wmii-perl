@@ -3,7 +3,7 @@ package App::wmiirc;
 use 5.014;
 use App::wmiirc::Util;
 use File::Which;
-use IO::Async::Loop;
+use IO::Async::Loop 0.47;
 use IO::Async::Stream;
 use Moo;
 use Try::Tiny;
