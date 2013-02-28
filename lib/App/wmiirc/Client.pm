@@ -74,7 +74,7 @@ sub key_list_clients(Modkey-slash) {
 
   my @clients = map {
     my $n = $self->clients->{$_}[2];
-    $n =~ s/`!//g; "$n`!$_"
+    substr($n =~ s/`!//gr, 0, 100) . "`!$_"
   } grep defined $self->clients->{$_}[2], keys $self->clients;
 
   my $chrome_windows = $self->list_chrome_tabs;
@@ -90,7 +90,7 @@ sub key_list_clients(Modkey-slash) {
         @clients = grep !/`!$ids[0]$/, @clients;
         $cr_id_map{$win->{id}} = $ids[0];
       }
-      push @clients, $tab->{title} . '`!cr:' . $win->{id} . ':' . $tab->{id};
+      push @clients, substr($tab->{title}, 0, 80) . '`!cr:' . $win->{id} . ':' . $tab->{id};
     }
   }
 
