@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+use strict;
+my $FIFO = "$ENV{HOME}/.notify-relay";
+
+# Attempt to only have one running
+open my $pid_fh, "<", "$FIFO.pid";
+if($pid_fh) {
+  chomp(my $pid = <$pid_fh>);
+  open my $cmdline_fh, "<", "/proc/$pid/cmdline";
+  if(<$cmdline_fh> =~ /\Q$0\E/) {
+    kill TERM => $pid;
+  }
+}
+
+open my $pid_fh, ">", "$FIFO.pid";
+print $pid_fh "$$\n";
+close $pid_fh;
+
+while(1) {
+  unless(-p $FIFO) {
+    require POSIX;
+    unlink "$ENV{HOME}/.notify-relay";
+    POSIX::mkfifo($FIFO, 0700) or die "Can't open $FIFO: $!";
+  }
+
+  open my $fh, "<", $FIFO;
+  while(<$fh>) {
+    chomp;
+    system "notify-send", map unescape($_), split /;/;
+  }
+}
+
+sub unescape {
+  $_ = shift;
+  s/\\([;\\])/$1/g;
+  $_;
+}
+
+=pod
+
+In F<~/.zlogin>:
+
+  if [[ -n $SSH_TTY && $TERM != "screen" ]]; then
+    ( (exec notify-relay)& )
+  fi
+
+In F<~/.wmii/startup>:
+
+  notify-relay
+
+TODO: Consider less hacky way in face of multiple logins, maybe SSH master?

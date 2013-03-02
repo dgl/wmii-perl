@@ -1,0 +1,112 @@
+#!/usr/bin/perl
+use autodie;
+use strict;
+use File::Basename;
+use File::Spec;
+use Getopt::Long;
+use Pod::Usage;
+
+my @ORIG_ARGV = @ARGV;
+
+my %opts;
+GetOptions(map {
+    my($name) = /([^|]+)/;
+    $opts{$name} = undef;
+    $_ => \$opts{$name}
+  } qw(urgency|u=s expire-time|t=i app-name|a=s
+       icon|i=s category|c=s hint|h=s version|v)) or pod2usage();
+if($opts{version}) {
+  print "notify-send hack v1 <http://dg.cx>\n";
+  exit;
+}
+pod2usage(1) unless @ARGV;
+
+my $data = join ";", map(escape("--$_=$opts{$_}"),
+  grep defined $opts{$_}, keys %opts), map escape($_), @ARGV;
+
+# Screen or tmux
+if($ENV{TERM} =~ /^screen/) {
+  $SIG{ALRM} = sub { die };
+  eval {
+    alarm 1;
+    open my $fh, ">", "$ENV{HOME}/.notify-relay";
+    if($fh) {
+      syswrite $fh, "$data\n";
+      exit 0;
+    }
+  };
+  alarm 0;
+} elsif(-t STDERR) {
+  print STDERR "\e]777;notify;$data\a";
+  exit 0;
+}
+
+if($ENV{DISPLAY}) {
+  if($ENV{WMII_CONFPATH}) {
+    # Assume wmii(-perl)
+    my $method = "msg";
+    if($opts{urgency} && $opts{urgency} eq 'low') {
+      $method = "notice";
+    }
+    my $msg = $ARGV[0];
+    $msg .= ": @ARGV[1 .. $#ARGV]" if @ARGV > 1;
+    exec "wmiir", "xwrite", "/event", $method, $msg;
+  } else {
+    my $this_dir = File::Spec->rel2abs(dirname($0));
+    my $i = 0;
+    my @path = split /:/, $ENV{PATH};
+    for(@path) {
+      $i++;
+      last if $_ eq $this_dir;
+    }
+    splice @path, 0, $i;
+
+    for(@path) {
+      -x "$_/notify-send" && exec "$_/notify-send", @ORIG_ARGV;
+    }
+  }
+}
+
+exit 1;
+
+# ; is a separator, escape with \ (and also escape \)
+sub escape {
+  $_ = shift;
+  s/\\/\\\\/g;
+  s/;/\\;/g;
+  $_
+}
+
+=head1 USAGE
+
+  notify-send [OPTION]... SUMMARY [BODY]...
+
+Options are as notify-send(1) (in libnotify-bin on Debian based systems).
+
+This programme will attempt to do something sane with notifications.
+
+It tries these:
+
+=over 4
+
+=item *
+
+Local system or SSH with tty: Will output a terminal escape sequence which it
+assumes your terminal can handle.
+
+=item *
+
+Local system or SSH with no tty but $DISPLAY set:
+Find notify-send later in the $PATH or other notification method.
+
+=item *
+
+Screen/tmux: Argh. See notify-relay. It doesn't work if you use screen then ssh.
+
+=item *
+
+Anything else: Nothing (except exit(1)).
+
+=back
+
+=cut

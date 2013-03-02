@@ -3,5 +3,12 @@
 sub on_osc_seq_perl {
    my ($self, $osc) = @_;
    return unless $osc =~ s/^notify;//;
-   $self->exec_async("wmiir", "xwrite", "/event", "msg $osc");
+
+   $self->exec_async("notify-send", map unescape($_), split /;/, $osc);
+}
+
+sub unescape {
+  $_ = shift;
+  s/\\([;\\])/$1/g;
+  $_;
 }
