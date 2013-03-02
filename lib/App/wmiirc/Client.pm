@@ -124,10 +124,15 @@ sub event_shell_window_pid {
   $self->clients->{$id}[3] = $pid;
 }
 
+# Undistract-me implementation
+# TODO: Split into module, needs ->client data for _last_destroyed_ppid though.
 sub event_command_done {
-  my($self, $pid, @msg) = @_;
+  my($self, $window_id, $pid, @msg) = @_;
+  my($cur_id) = wmiir "/client/sel/ctl";
+  return if $cur_id eq $window_id;
+
   if(!$self->_last_destroyed_ppid or $pid != $self->_last_destroyed_ppid) {
-    $self->core->dispatch("event_msg", "@msg");
+    $self->core->dispatch("event_msg", "done: @msg");
   }
 }
 
