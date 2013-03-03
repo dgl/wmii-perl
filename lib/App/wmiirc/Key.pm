@@ -19,6 +19,11 @@ use IO::Async::Process;
   }
 }
 
+has _raw_on => (
+  is => 'rw',
+  default => sub { 0 },
+);
+
 with 'App::wmiirc::Role::Key';
 with 'App::wmiirc::Role::Action';
 
@@ -147,6 +152,21 @@ sub action_rehash {
       $finish->() if $finish && ref $finish eq 'CODE';
     }
   ));
+}
+
+sub key_raw(Modkey-Control-space) {
+  my($self) = @_;
+  $self->_raw_on(!$self->_raw_on);
+  if($self->_raw_on) {
+    my $modkey = config("keys", "modkey", "Mod4");
+    my @raw_keys = map s/Modkey/$modkey/er, split /,\s*/,
+      config("keys", "raw", prototype \&key_raw);
+    wmiir "/keys", @raw_keys;
+    $self->core->dispatch("event_notice", "Raw on ($raw_keys[0] to exit)");
+  } else {
+    wmiir "/keys", keys $self->core->_keys;
+    $self->core->dispatch("event_notice", "Raw off");
+  }
 }
 
 sub action_wmiirc {
