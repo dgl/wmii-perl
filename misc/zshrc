@@ -20,6 +20,7 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen*)
      # Did the last command take longer than 10 seconds?
      if [ "$cmdstart" -gt 0 -a "$[$(date +%s) - $cmdstart]" -gt 10 ]; then
        echo -ne '\e]777;done;'"$$;$curcmd"'\a\a'
+       cmdstart=0
      fi
      trap - WINCH
    }

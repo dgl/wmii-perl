@@ -4,6 +4,6 @@ sub on_osc_seq_perl {
    my ($self, $osc) = @_;
    return unless $osc =~ s/^done;//;
    $self->exec_async("wmiir", "xwrite", "/event", "CommandDone",
-      sprintf("0x%x", $self->vt - 2),
+      sprintf("0x%x", $self->parent),
       split /;/, $osc, 2);
 }
