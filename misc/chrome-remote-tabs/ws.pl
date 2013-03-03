@@ -57,6 +57,16 @@ my $listener = IO::Async::Listener->new(
   },
 );
 
+$loop->add($server);
+$server->listen(
+  host => "127.0.0.1", # Should support IPv6 one day, problem is I use the listening port
+  # effectively as a lock, it's possible for one IPv6 and one IPv4 process to be listening.
+  service => 3000,
+  on_listen_error => sub { die "Cannot listen - $_[-1]" },
+  on_resolve_error => sub { die "Cannot resolve - $_[-1]" },
+);
+
+$loop->loop_once;
 
 $loop->add($listener);
 unlink "/tmp/ch-$ENV{USER}";
@@ -68,14 +78,6 @@ $listener->listen(
     socktype => 'stream',
   },
   on_listen_error => sub { die "Cannot listen - $_[-1]" },
-);
-
-$loop->add($server);
-$server->listen(
-  host => "localhost",
-  service => 3000,
-  on_listen_error => sub { die "Cannot listen - $_[-1]" },
-  on_resolve_error => sub { die "Cannot resolve - $_[-1]" },
 );
 
 $loop->run;
