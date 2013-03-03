@@ -3,7 +3,7 @@ use strict;
 use Encode;
 use IO::Async::Loop; # 0.55;
 use JSON;
-use Net::Async::WebSocket::Server;
+use Net::Async::WebSocket::Server 0.06;
 
 my %c;
 my $client;
