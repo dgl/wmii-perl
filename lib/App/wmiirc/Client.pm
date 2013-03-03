@@ -129,7 +129,7 @@ sub event_shell_window_pid {
 sub event_command_done {
   my($self, $window_id, $pid, @msg) = @_;
   my($cur_id) = wmiir "/client/sel/ctl";
-  return if $cur_id eq $window_id;
+  return if $cur_id && $cur_id eq $window_id;
 
   if(!$self->_last_destroyed_ppid or $pid != $self->_last_destroyed_ppid) {
     $self->core->dispatch("event_msg", "done: @msg");
