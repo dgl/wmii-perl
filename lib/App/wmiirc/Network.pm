@@ -1,7 +1,7 @@
 package App::wmiirc::Network;
 # So network manager annoys me, this is a pretty lame replacement and certainly
 # not "just works", but suits my purposes. YMMV
-use 5.016;
+use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Timer::Periodic 0.50;
 
