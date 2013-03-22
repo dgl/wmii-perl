@@ -166,7 +166,7 @@ sub key_terminal_here(Modkey-Control-Return) {
       exit 1;
     }
     my($title) = wmiir "/client/sel/label";
-    my($dir) = $title =~ m{(?:^|\()(?:\w+: )?([~/].*?)(?:$|\))};
+    my($dir) = $title =~ m{(?:^|\()(?:[-\w]+: )?([~/].*?)(?:$|\))};
     $dir ||= "~";
     exec $self->core->main_config->{terminal}, qw(-name URxvtSsh -e zsh -i -c),
       qq{exec ssh -t $host 'cd $dir; exec \$SHELL'};
