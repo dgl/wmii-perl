@@ -49,6 +49,7 @@ sub action_xsel_action(Modkey-Shift-o) {
 
 sub action_default {
   my($self, $action, @args) = @_;
+  return unless defined $action;
 
   if($action =~ m{^[/~]}) {
     # A file?
@@ -85,7 +86,7 @@ sub action_default {
 
       if($host =~ /^\S+:\d+/) {
         $browser->();
-      } elsif($host !~ / /) {
+      } elsif($host =~ /^([\w.-]+)$/) {
         $self->core->loop->resolver->getaddrinfo(
           host => $host,
           service => "http",
