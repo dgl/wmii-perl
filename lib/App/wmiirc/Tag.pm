@@ -84,7 +84,7 @@ sub event_urgent_tag {
     my($cur_id) = wmiir "/client/sel/ctl";
     my $other = 0;
     for my $id(@{$self->_urgent}) {
-      my($id, @items) = wmiir "/client/$id/ctl";
+      my(undef, @items) = wmiir "/client/$id/ctl";
       $other = 1 if $id ne $cur_id && grep /^urgent on/, @items;
     }
     return unless $other;
