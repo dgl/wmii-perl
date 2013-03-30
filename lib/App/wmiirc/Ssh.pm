@@ -20,7 +20,7 @@ sub action_ssh {
   if(-r $known_hosts && !$last_mtime
       || $last_mtime != stat($known_hosts)->mtime) {
     open my $fh, "<", $known_hosts or die "$known_hosts: $!";
-    @hosts = map /^([^, ]+)/ ? $1 : (), <$fh>;
+    @hosts = map /^\[?([^\]:, ]+)/ ? $1 : (), <$fh>;
   }
 
   if(my $host = @args ? "@args"
