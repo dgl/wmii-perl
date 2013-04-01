@@ -93,7 +93,7 @@ sub _update_events {
 sub _update_next_event {
   my($self) = @_;
   my $reminder = config("calendar", "reminder", 300);
-  my $t = gmtime;
+  my $t = localtime;
 
   if(my @events = grep $_->[0] - $reminder > $t, @{$self->_events}) {
     $self->_event_timer->stop if $self->_event_timer;
