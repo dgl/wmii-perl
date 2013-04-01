@@ -75,11 +75,11 @@ sub _update_events {
         for my $line(split /\n/, $stdout) {
           my($when, $where, $title) = split /,/, $line, 3;
           next unless $title;
-          my($start, $end) = map Time::Piece->strptime((/(\d+:\d+)/)[0],
-            "%H:%M"), split / - /, $when;
+          my($start, $end) = map /(\d+):(\d+)/ && $1 * 3600 + $2 * 60,
+	    split / - /, $when;
           my $t = localtime;
-          my $today = mktime(0, 0, 0, $t->mday, $t->_mon, $t->_year);
-          push @events, [ $start + $today, $end + $today, $title, $where ];
+          my $today = localtime mktime(0, 0, 0, $t->mday, $t->_mon, $t->_year);
+          push @events, [ $today + $start, $today + $end, $title, $where ];
         }
         $self->_events([sort @events]);
         $self->_update_next_event;
