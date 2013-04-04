@@ -172,7 +172,8 @@ sub action_todo {
   my $self = shift;
   my $text = "@_";
   if(!$text) {
-    if(!$self->core->dispatch("key_goto_regex", qr/^todo \(~\)/)) {
+    if(!$self->core->dispatch("key_goto_regex",
+        config('todo', 'window_re', '^todo \W'))) {
       $self->core->dispatch("action_default", "~/todo");
     }
   } else {
