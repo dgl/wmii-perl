@@ -83,9 +83,10 @@ sub key_list_clients(Modkey-slash) {
     for my $tab(@{$win->{tabs}}) {
       if($tab->{active}) {
         # Urgh.
-        my @ids = grep { $self->clients->{$_}[2] =~
-          /\Q$tab->{title}\E - (?:Chromium|Google Chrome)$/ }
-          keys $self->clients;
+        my @ids = grep {
+            $tab->{title} && $self->clients->{$_}[2] =~
+              /\Q$tab->{title}\E - (?:Chromium|Google Chrome)$/
+          } keys $self->clients;
         next if !@ids || @ids > 1; # Better way to handle this?
         @clients = grep !/`!$ids[0]$/, @clients;
         $cr_id_map{$win->{id}} = $ids[0];
