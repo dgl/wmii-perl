@@ -155,35 +155,49 @@ sub key_terminal_here(Modkey-Control-Return) {
   my $pid = $self->clients->{$cur_id // ""}[3] ||
     (map /(\d+)/, grep /^pid /, @items)[0];
   return unless $pid;
-  my $fork = fork;
-  return if $fork || not defined $fork;
-  if(readlink("/proc/$pid/exe") =~ m{/ssh$}) {
-    open my $cmd_fh, "<", "/proc/$pid/cmdline";
-    my $cmd = join " ", <$cmd_fh>;
-    $cmd =~ s/\0/ /g;
-    my($host) = $cmd =~ /ssh\s+(?:-\S+\s+)*(\S+)/;
-    if(!$host) {
-      warn "Unable to figure out hostname\n";
-      exit 1;
+
+  my $is_ssh = readlink("/proc/$pid/exe") =~ m{/ssh$};
+  if(!$is_ssh) {
+    for my $child(`ps --ppid=$pid ho pid`) {
+      chomp $child;
+      if(readlink("/proc/$child/exe") =~ m{/ssh$}) {
+        $is_ssh = 1;
+        $pid = $child;
+      }
     }
-    my($title) = wmiir "/client/sel/label";
-    my($dir) = $title =~ m{(?:^|\()(?:[-\w]+: )?([~/].*?)(?:$|\))};
-    $dir ||= "~";
-    exec $self->core->main_config->{terminal}, qw(-name URxvtSsh -e zsh -i -c),
-      qq{exec ssh -t $host 'cd $dir; exec \$SHELL'};
-    no warnings 'exec';
-    warn "Exec failed: $?";
-    exit 1;
-  } elsif(-d "/proc/$pid/cwd") {
-    chdir "/proc/$pid/cwd";
-  } else {
-    # No /proc, try lsof
-    my($dir) = `lsof -p $pid -a -d cwd -a -u $ENV{USER} -Fn` =~ /^n(.*)/m;
-    chdir $dir if $dir;
   }
-  exec $self->core->main_config->{terminal};
-  no warnings 'exec';
-  warn "Exec failed: $?";
+
+  my $fork = fork;
+  return if $fork or not defined $fork;
+
+  eval {
+    if($is_ssh) {
+      open my $cmd_fh, "<", "/proc/$pid/cmdline";
+      my $cmd = join " ", <$cmd_fh>;
+      $cmd =~ s/\0/ /g;
+      my($host) = $cmd =~ /ssh\s+(?:-\S+\s+)*(\S+)/;
+      if(!$host) {
+        die "Unable to figure out hostname\n";
+      }
+      my($title) = wmiir "/client/sel/label";
+      my($dir) = $title =~ m{(?:^|\()(?:[-\w]+: )?([~/].*?)(?:$|\))};
+      $dir ||= "~";
+      exec $self->core->main_config->{terminal},
+        qw(-name URxvtSsh -e zsh -i -c),
+        qq{exec ssh -t $host 'cd $dir; exec \$SHELL'};
+      die "Exec failed: $?";
+    } elsif(-d "/proc/$pid/cwd") {
+      chdir "/proc/$pid/cwd";
+    } else {
+      # No /proc, try lsof
+      my($dir) = `lsof -p $pid -a -d cwd -a -u $ENV{USER} -Fn` =~ /^n(.*)/m;
+      chdir $dir if $dir;
+    }
+    exec $self->core->main_config->{terminal};
+    die "Exec failed: $?";
+  };
+
+  warn $@ if $@;
   exit 1;
 }
 
