@@ -175,12 +175,13 @@ sub key_terminal_here(Modkey-Control-Return) {
       open my $cmd_fh, "<", "/proc/$pid/cmdline";
       my $cmd = join " ", <$cmd_fh>;
       $cmd =~ s/\0/ /g;
-      my($host) = $cmd =~ /ssh\s+(?:-\S+\s+)*(\S+)/;
+      my($host) = $cmd =~ /ssh\s+(?:-\S+\s+)*([a-zA-Z0-9.-]+)/;
       if(!$host) {
         die "Unable to figure out hostname\n";
       }
       my($title) = wmiir "/client/sel/label";
-      my($dir) = $title =~ m{(?:^|\()(?:[-\w]+: )?([~/].*?)(?:$|\))};
+      my($dir) = $title =~
+        m{(?:^|\()(?:[-\w]+: )?([~/][/a-zA-Z0-9._-]+)(?:$|\))};
       $dir ||= "~";
       exec $self->core->main_config->{terminal},
         qw(-name URxvtSsh -e zsh -i -c),
