@@ -24,7 +24,15 @@ for my $alias(keys %aliases) {
 
   _getglob("action_$alias") = sub {
     my($self, @args) = @_;
-    $self->action_default(sprintf $target, uri_escape_utf8 "@args");
+    my($action) = $target =~ /^(\w+)(?:$|\s)/;
+    my $t = $target;
+    if($action && exists $self->core->_actions->{$action}) {
+      $t =~ s/^$action\s+//;
+    } else {
+      $action = "default";
+    }
+    $self->core->dispatch("action_$action", sprintf $t,
+      $action eq 'default' ? uri_escape_utf8 "@args" : @args);
   };
 }
 
