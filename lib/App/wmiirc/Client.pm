@@ -104,11 +104,16 @@ sub key_list_clients(Modkey-slash) {
     }
 
     return unless $win;
-    my($tags) = wmiir "/client/$win/tags";
-    if($tags) {
-      wmiir "/ctl", "view $tags";
-      wmiir "/tag/sel/ctl", "select client $win";
-    }
+  }
+}
+
+sub _goto_win {
+  my($win) = @_;
+
+  my($tags) = wmiir "/client/$win/tags";
+  if($tags) {
+    wmiir "/ctl", "view $tags";
+    wmiir "/tag/sel/ctl", "select client $win";
   }
 }
 
@@ -208,16 +213,24 @@ sub key_goto_regex {
 
   for my $c(keys %{$self->clients}) {
     my $cl = $self->clients->{$c};
-    # TODO: use lsof here for portability
-    if(($cl->[3] && `ps --ppid=$cl->[3] ho cmd` =~ $regex)
-      || ($cl->[0] && $cl->[0] =~ $regex)
+    if(($cl->[0] && $cl->[0] =~ $regex)
       || ($cl->[2] && $cl->[2] =~ $regex)) {
-      # TODO: multiple tag support
-      my($tags) = wmiir "/client/$c/tags";
-      wmiir "/ctl", "view $tags";
-      wmiir "/tag/sel/ctl", "select client $c";
+      _goto_win($c);
       $found = 1;
       last;
+    }
+  }
+
+  if(!$found) {
+    # Try the more expensive shelling out only if needed
+    for my $c(keys %{$self->clients}) {
+      my $cl = $self->clients->{$c};
+      # TODO: use lsof here for portability
+      if($cl->[3] && `ps --ppid=$cl->[3] ho cmd` =~ $regex) {
+        _goto_win($c);
+        $found = 1;
+        last;
+      }
     }
   }
   $found;
