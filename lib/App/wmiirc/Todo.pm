@@ -209,8 +209,10 @@ sub render {
       $text .= sprintf " [%dm]", $time / 60;
     }
 
-    if($time > 20*60 && !$self->_inactive_start) {
-      my $t = 1 - ($time / (40*60));
+    my $task_time = config('todo', 'task_time', 20) * 60;
+
+    if($time > $task_time && !$self->_inactive_start) {
+      my $t = 1 - ($time / (2 * $task_time));
       $t = 0 if $t < 0;
       $self->fade_set($t * $self->fade_count);
     } else {
