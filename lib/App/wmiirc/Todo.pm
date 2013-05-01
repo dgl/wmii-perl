@@ -111,6 +111,7 @@ sub action_do {
     $self->_doing([$text]);
   }
 
+  $self->_inactive_time(0);
   $self->_start_time(time);
   $self->render;
 }
@@ -160,8 +161,9 @@ sub action_done {
       }
     };
   }
-  $self->_start_time(0);
   $self->_doing(undef);
+  $self->_inactive_time(0);
+  $self->_start_time(0);
   if(config("todo", "mode", "") eq "work") {
     $self->action_do(\0);
   }
@@ -204,12 +206,11 @@ sub render {
     # http://blog.fsck.com/2012/10/today.html
     my $text = $self->_doing->[-1];
     my $time = (time - $self->_start_time) - $self->_inactive_time;
+    my $task_time = config('todo', 'task_time', 20) * 60;
 
-    if($time > 15*60) {
+    if($time > $task_time * .66) {
       $text .= sprintf " [%dm]", $time / 60;
     }
-
-    my $task_time = config('todo', 'task_time', 20) * 60;
 
     if($time > $task_time && !$self->_inactive_start) {
       my $t = 1 - ($time / (2 * $task_time));
