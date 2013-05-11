@@ -104,6 +104,7 @@ sub key_list_clients(Modkey-slash) {
     }
 
     return unless $win;
+    _goto_win($win);
   }
 }
 
