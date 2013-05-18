@@ -5,21 +5,10 @@ use Eval::WithLexicals;
 use IO::Pty;
 use IO::Async::Process;
 
-has name => (
-  is => 'ro',
-  default => sub { 'debug' }
-);
-
 with 'App::wmiirc::Role::Action';
-with 'App::wmiirc::Role::Widget';
 
-sub BUILD {
+sub action_debug {
   my($self) = @_;
-  $self->label("!");
-}
-
-sub widget_click {
-  my($self, $button) = @_;
 
   if($self->{_active}) {
     # This is a bit annoying, but we want to ensure we don't get nested deeply
@@ -77,7 +66,6 @@ sub widget_click {
   $process->kill("TERM");
   $self->{_active} = undef;
 }
-*action_debug = *action_debug = *widget_click;
 
 { package # avoid indexing
   D;
