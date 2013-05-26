@@ -1,8 +1,8 @@
 package App::wmiirc::Clock;
-use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Timer::Absolute;
 use POSIX qw(strftime);
+use Switch::Plain;
 
 has name => (
   is => 'ro',
@@ -83,24 +83,28 @@ sub _format {
 sub widget_click {
   my($self, $button) = @_;
 
-  if($button == 1) {
-    $self->core->dispatch("action_calendar");
-  } elsif($button == 4 || $button ==  5) {
-    return unless @{$self->extra_tz};
-
-    if($self->current_tz < 0) {
-      $self->current_tz($button == 4 ? @{$self->extra_tz} - 1 : 0);
-    } else {
-      my $inc = $button == 4 ? -1 : 1;
-      $self->current_tz($self->current_tz + $inc);
-      if($self->current_tz < 0 || $self->current_tz == @{$self->extra_tz}) {
-        $self->current_tz(-1);
-      }
+  nswitch($button) {
+    case 1: {
+      $self->core->dispatch("action_calendar");
     }
-    $self->render;
-  } elsif($button == 3) {
-    system "zenity", "--calendar";
-    system "cal -y | xmessage -file -" if $? == -1;
+    case 4: case 5: {
+      return unless @{$self->extra_tz};
+
+      if($self->current_tz < 0) {
+        $self->current_tz($button == 4 ? @{$self->extra_tz} - 1 : 0);
+      } else {
+        my $inc = $button == 4 ? -1 : 1;
+        $self->current_tz($self->current_tz + $inc);
+        if($self->current_tz < 0 || $self->current_tz == @{$self->extra_tz}) {
+          $self->current_tz(-1);
+        }
+      }
+      $self->render;
+    }
+    case 3: {
+      system "zenity", "--calendar";
+      system "cal -y | xmessage -file -" if $? == -1;
+    }
   }
 }
 

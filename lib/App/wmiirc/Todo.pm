@@ -1,9 +1,9 @@
 package App::wmiirc::Todo;
-use 5.014;
 use App::wmiirc::Plugin;
 use Fcntl qw(SEEK_SET);
 use IO::Async::Timer::Periodic;
 use Scalar::Util qw(looks_like_number);
+use Switch::Plain;
 
 has name => (
   is => 'ro',
@@ -232,21 +232,24 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  if($button == 1) {
-    if(!$self->_doing) {
-      $self->action_do;
-    } else {
-      for my $doing(reverse @{$self->_doing}) {
-        if($doing =~ m{(https?://\S+|\w+/\S+)}) {
-          my $url = $1;
-          $url =~ s/\W$//;
-          $self->core->dispatch("action_default", $url);
-          last;
+  nswitch($button) {
+    case 1: {
+      if(!$self->_doing) {
+        $self->action_do;
+      } else {
+        for my $doing(reverse @{$self->_doing}) {
+          if($doing =~ m{(https?://\S+|\w+/\S+)}) {
+            my $url = $1;
+            $url =~ s/\W$//;
+            $self->core->dispatch("action_default", $url);
+            last;
+          }
         }
       }
     }
-  } elsif($button == 3) {
-    $self->action_todo;
+    case 3: {
+      $self->action_todo;
+    }
   }
 }
 

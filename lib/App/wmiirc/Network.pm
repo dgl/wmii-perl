@@ -1,9 +1,9 @@
 package App::wmiirc::Network;
 # So network manager annoys me, this is a pretty lame replacement and certainly
 # not "just works", but suits my purposes. YMMV
-use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Timer::Periodic 0.50;
+use Switch::Plain;
 
 has name => (
   is => 'ro',
@@ -62,18 +62,22 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  if($button == 1) {
-    my $network = wimenu { name => "network:", history => "ssid", i => undef },
-      map { /ESSID:"(.*)"/ ? $1 : () } qx{iwlist $config{device} scan};
-    if(defined $network) {
-      $network = "'$network'";
-      system "wifi-up $network &";
+  nswitch($button) {
+    case 1: {
+      my $network = wimenu { name => "network:", history => "ssid", i => undef },
+        map { /ESSID:"(.*)"/ ? $1 : () } qx{iwlist $config{device} scan};
+      if(defined $network) {
+        $network = "'$network'";
+        system "wifi-up $network &";
+      }
     }
-  } elsif($button == 2) {
-    system "(ifconfig $config{device}; iwconfig $config{device}) | xmessage -default okay -file -&";
-  } elsif($button == 3) {
-    $self->{_show_extra} ^= 1;
-    $self->render;
+    case 2: {
+      system "(ifconfig $config{device}; iwconfig $config{device}) | xmessage -default okay -file -&";
+    }
+    case 3: {
+      $self->{_show_extra} ^= 1;
+      $self->render;
+    }
   }
 }
 

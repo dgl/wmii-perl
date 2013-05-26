@@ -1,7 +1,7 @@
 package App::wmiirc::Loadavg;
-use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Timer::Periodic 0.50;
+use Switch::Plain;
 use Unix::Uptime;
 
 has name => (
@@ -63,12 +63,15 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  if($button == 1) {
-    $self->{_show_all} ^= 1;
-    $self->render;
-  } elsif($button == 3) {
-    system $self->core->main_config->{terminal}
-      . " -e " . (config("commands", "top") || "top") . "&";
+  nswitch($button) {
+    case 1: {
+      $self->{_show_all} ^= 1;
+      $self->render;
+    }
+    case 3: {
+      system $self->core->main_config->{terminal}
+        . " -e " . (config("commands", "top") || "top") . "&";
+    }
   }
 }
 

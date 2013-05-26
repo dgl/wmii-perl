@@ -1,7 +1,7 @@
 package App::wmiirc::Volume;
-use 5.014;
 use App::wmiirc::Plugin;
 use IO::Async::Timer::Periodic;
+use Switch::Plain;
 
 # TODO: Split actual audio volume control into another module and fix the stupid
 # logic. Anything on CPAN?
@@ -51,14 +51,17 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  if($button == 1) {
-    $self->set($self->volume eq 'off' ? "unmute" : "mute");
-  } elsif($button == 3) {
-    system config("commands", "volume") . '&';
-  } elsif($self->volume ne 'off') {
-    if($button == 4) {
+  nswitch($button) {
+    case 1: {
+      $self->set($self->volume eq 'off' ? "unmute" : "mute");
+    }
+    case 3: {
+      system config("commands", "volume") . '&';
+    }
+    case 4 if $self->volume ne 'off': {
       $self->set($self->volume  + 2 . "%");
-    } elsif($button == 5) {
+    }
+    case 5 if $self->volume ne 'off': {
       $self->set($self->volume - 2 . "%");
     }
   }

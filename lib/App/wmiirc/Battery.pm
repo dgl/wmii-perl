@@ -4,6 +4,7 @@ use App::wmiirc::Plugin;
 use Const::Fast;
 use IO::Async::Timer::Periodic 0.50;
 use POSIX qw(strftime);
+use Switch::Plain;
 
 const my $BATTERY_SYS => '/sys/class/power_supply';
 
@@ -75,24 +76,28 @@ sub render {
                           $self->_bat("energy_full") * 100),
   );
 
-  my $status = $self->_bat("status");
-  if($status eq "Discharging") {
-    if($minutes <= $config{warn_minutes}) {
-      $self->core->dispatch("event_msg", "Battery critical");
-    }
+  sswitch($self->_bat("status")) {
+    case "Discharging": {
+      if($minutes <= $config{warn_minutes}) {
+        $self->core->dispatch("event_msg", "Battery critical");
+      }
 
-    if($minutes <= $config{info_minutes}) {
-      $self->fade_set($minutes / $config{info_minutes} * $self->fade_count);
-      $self->label(\%data, $config{on_battery}, $self->fade_current_color);
-    } else {
-      $self->label(\%data, $config{on_battery});
+      if($minutes <= $config{info_minutes}) {
+        $self->fade_set($minutes / $config{info_minutes} * $self->fade_count);
+        $self->label(\%data, $config{on_battery}, $self->fade_current_color);
+      } else {
+        $self->label(\%data, $config{on_battery});
+      }
     }
-  } elsif($status eq "Charging") {
-    $self->label(\%data, $config{on_ac});
-  } elsif($status eq "Full") {
-    $self->label(\%data, $config{full});
-  } else {
-    $self->label(\%data, $config{no_battery});
+    case "Charging": {
+      $self->label(\%data, $config{on_ac});
+    }
+    case "Full": {
+      $self->label(\%data, $config{full});
+    }
+    default: {
+      $self->label(\%data, $config{no_battery});
+    }
   }
 }
 
@@ -105,10 +110,13 @@ sub label {
 sub widget_click {
   my($self, $button) = @_;
 
-  if($button == 1) {
-    system "acpi -V | xmessage -default okay -file -&";
-  } elsif($button == 3) {
-    system $self->core->main_config->{terminal} . " -e sudo powertop&";
+  nswitch($button) {
+    case 1: {
+      system "acpi -V | xmessage -default okay -file -&";
+    }
+    case 3: {
+      system $self->core->main_config->{terminal} . " -e sudo powertop&";
+    }
   }
 }
 
