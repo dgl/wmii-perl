@@ -75,28 +75,24 @@ sub render {
                           $self->_bat("energy_full") * 100),
   );
 
-  given($self->_bat("status")) {
-    when("Discharging") {
-      if($minutes <= $config{warn_minutes}) {
-        $self->core->dispatch("event_msg", "Battery critical");
-      }
+  my $status = $self->_bat("status");
+  if($status eq "Discharging") {
+    if($minutes <= $config{warn_minutes}) {
+      $self->core->dispatch("event_msg", "Battery critical");
+    }
 
-      if($minutes <= $config{info_minutes}) {
-        $self->fade_set($minutes / $config{info_minutes} * $self->fade_count);
-        $self->label(\%data, $config{on_battery}, $self->fade_current_color);
-      } else {
-        $self->label(\%data, $config{on_battery});
-      }
+    if($minutes <= $config{info_minutes}) {
+      $self->fade_set($minutes / $config{info_minutes} * $self->fade_count);
+      $self->label(\%data, $config{on_battery}, $self->fade_current_color);
+    } else {
+      $self->label(\%data, $config{on_battery});
     }
-    when("Charging") {
-      $self->label(\%data, $config{on_ac});
-    }
-    when("Full") {
-      $self->label(\%data, $config{full});
-    }
-    default {
-      $self->label(\%data, $config{no_battery});
-    }
+  } elsif($status eq "Charging") {
+    $self->label(\%data, $config{on_ac});
+  } elsif($status eq "Full") {
+    $self->label(\%data, $config{full});
+  } else {
+    $self->label(\%data, $config{no_battery});
   }
 }
 
@@ -109,13 +105,10 @@ sub label {
 sub widget_click {
   my($self, $button) = @_;
 
-  given($button) {
-    when(1) {
-      system "acpi -V | xmessage -default okay -file -&";
-    }
-    when(3) {
-      system $self->core->main_config->{terminal} . " -e sudo powertop&";
-    }
+  if($button == 1) {
+    system "acpi -V | xmessage -default okay -file -&";
+  } elsif($button == 3) {
+    system $self->core->main_config->{terminal} . " -e sudo powertop&";
   }
 }
 

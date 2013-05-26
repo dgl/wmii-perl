@@ -232,24 +232,21 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  given($button) {
-    when(1) {
-      if(!$self->_doing) {
-        $self->action_do;
-      } else {
-        for my $doing(reverse @{$self->_doing}) {
-          if($doing =~ m{(https?://\S+|\w+/\S+)}) {
-            my $url = $1;
-            $url =~ s/\W$//;
-            $self->core->dispatch("action_default", $url);
-            last;
-          }
+  if($button == 1) {
+    if(!$self->_doing) {
+      $self->action_do;
+    } else {
+      for my $doing(reverse @{$self->_doing}) {
+        if($doing =~ m{(https?://\S+|\w+/\S+)}) {
+          my $url = $1;
+          $url =~ s/\W$//;
+          $self->core->dispatch("action_default", $url);
+          last;
         }
       }
     }
-    when(3) {
-      $self->action_todo;
-    }
+  } elsif($button == 3) {
+    $self->action_todo;
   }
 }
 

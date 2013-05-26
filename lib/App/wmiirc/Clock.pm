@@ -83,28 +83,24 @@ sub _format {
 sub widget_click {
   my($self, $button) = @_;
 
-  given($button) {
-    when (1) {
-      $self->core->dispatch("action_calendar");
-    }
-    when ([4, 5]) {
-      return unless @{$self->extra_tz};
+  if($button == 1) {
+    $self->core->dispatch("action_calendar");
+  } elsif($button == 4 || $button ==  5) {
+    return unless @{$self->extra_tz};
 
-      if($self->current_tz < 0) {
-        $self->current_tz($button == 4 ? @{$self->extra_tz} - 1 : 0);
-      } else {
-        my $inc = $button == 4 ? -1 : 1;
-        $self->current_tz($self->current_tz + $inc);
-        if($self->current_tz < 0 || $self->current_tz == @{$self->extra_tz}) {
-          $self->current_tz(-1);
-        }
+    if($self->current_tz < 0) {
+      $self->current_tz($button == 4 ? @{$self->extra_tz} - 1 : 0);
+    } else {
+      my $inc = $button == 4 ? -1 : 1;
+      $self->current_tz($self->current_tz + $inc);
+      if($self->current_tz < 0 || $self->current_tz == @{$self->extra_tz}) {
+        $self->current_tz(-1);
       }
-      $self->render;
     }
-    when (3) {
-      system "zenity", "--calendar";
-      system "cal -y | xmessage -file -" if $? == -1;
-    }
+    $self->render;
+  } elsif($button == 3) {
+    system "zenity", "--calendar";
+    system "cal -y | xmessage -file -" if $? == -1;
   }
 }
 

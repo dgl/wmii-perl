@@ -51,20 +51,15 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  given($button) {
-    when(1) {
-      $self->set($self->volume eq 'off' ? "unmute" : "mute");
-    }
-    when(3) {
-      system config("commands", "volume") . '&';
-    }
-    if($self->volume ne 'off') {
-      when(4) {
-        $self->set($self->volume  + 2 . "%");
-      }
-      when(5) {
-        $self->set($self->volume - 2 . "%");
-      }
+  if($button == 1) {
+    $self->set($self->volume eq 'off' ? "unmute" : "mute");
+  } elsif($button == 3) {
+    system config("commands", "volume") . '&';
+  } elsif($self->volume ne 'off') {
+    if($button == 4) {
+      $self->set($self->volume  + 2 . "%");
+    } elsif($button == 5) {
+      $self->set($self->volume - 2 . "%");
     }
   }
 }

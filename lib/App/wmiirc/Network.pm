@@ -62,22 +62,18 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  given($button) {
-    when(1) {
-      my $network = wimenu { name => "network:", history => "ssid", i => undef },
-        map { /ESSID:"(.*)"/ ? $1 : () } qx{iwlist $config{device} scan};
-      if(defined $network) {
-        $network = "'$network'";
-        system "wifi-up $network &";
-      }
+  if($button == 1) {
+    my $network = wimenu { name => "network:", history => "ssid", i => undef },
+      map { /ESSID:"(.*)"/ ? $1 : () } qx{iwlist $config{device} scan};
+    if(defined $network) {
+      $network = "'$network'";
+      system "wifi-up $network &";
     }
-    when(2) {
-      system "(ifconfig $config{device}; iwconfig $config{device}) | xmessage -default okay -file -&";
-    }
-    when(3) {
-      $self->{_show_extra} ^= 1;
-      $self->render;
-    }
+  } elsif($button == 2) {
+    system "(ifconfig $config{device}; iwconfig $config{device}) | xmessage -default okay -file -&";
+  } elsif($button == 3) {
+    $self->{_show_extra} ^= 1;
+    $self->render;
   }
 }
 

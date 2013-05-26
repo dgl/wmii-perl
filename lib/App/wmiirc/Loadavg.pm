@@ -63,15 +63,12 @@ sub render {
 sub widget_click {
   my($self, $button) = @_;
 
-  given($button) {
-    when(1) {
-      $self->{_show_all} ^= 1;
-      $self->render;
-    }
-    when(3) {
-      system $self->core->main_config->{terminal}
-        . " -e " . (config("commands", "top") || "top") . "&";
-    }
+  if($button == 1) {
+    $self->{_show_all} ^= 1;
+    $self->render;
+  } elsif($button == 3) {
+    system $self->core->main_config->{terminal}
+      . " -e " . (config("commands", "top") || "top") . "&";
   }
 }
 
