@@ -15,11 +15,11 @@ sub key_backlight_up(XF86MonBrightnessUp) {
 }
 
 sub key_kbd_backlight_down(XF86KbdBrightnessDown) {
-  system qw(gksudo -- sh -c), "echo 0 > /sys/devices/platform/applesmc.768/leds/smc::kbd_backlight";
+  system qw(gksudo -- sh -c), "echo 0 > /sys/devices/platform/applesmc.768/leds/smc::kbd_backlight/brightness";
 }
 
 sub key_kbd_backlight_up(XF86KbdBrightnessUp) {
-  system qw(gksudo -- sh -c), "echo 4 > /sys/devices/platform/applesmc.768/leds/smc::kbd_backlight";
+  system qw(gksudo -- sh -c), "echo 4 > /sys/devices/platform/applesmc.768/leds/smc::kbd_backlight/brightness";
 }
 
 1;
