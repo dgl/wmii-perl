@@ -83,16 +83,19 @@ sub action_default {
         sprintf($aliases{$host}, ($aliases{$host} =~ /\?/ ?
           uri_escape_utf8 "$rest@args" : "$rest@args")) . "'&";
     } else {
+      state %host_cache;
+
       my $search = sub {
         system config("commands", "browser") . " '" . $self->search_domain .
             "search?q=" . uri_escape_utf8(join " ", $action, @args) . "'&";
       };
       my $browser = sub {
+        $host_cache{$action}++;
         system config("commands", "browser") . " 'http://$action"
           . (@args ? "/" . "@args" : "") . "'&";
       };
 
-      if($host =~ /^\S+:\d+/) {
+      if($host =~ /^\S+:\d+/ || exists $host_cache{$host}) {
         $browser->();
       } elsif($host =~ /^([\w.-]+)$/) {
         $self->core->loop->resolver->getaddrinfo(
