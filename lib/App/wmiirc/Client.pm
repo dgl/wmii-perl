@@ -83,6 +83,7 @@ sub key_list_clients(Modkey-slash) {
     for my $tab(@{$win->{tabs}}) {
       if($tab->{active}) {
         # Urgh.
+        no warnings 'uninitialized';
         my @ids = grep {
             $tab->{title} && $self->clients->{$_}[2] &&
             $self->clients->{$_}[2] =~
