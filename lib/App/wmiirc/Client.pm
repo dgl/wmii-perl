@@ -37,6 +37,7 @@ sub event_create_client {
     $ppid = 0 + $ppid if $ppid;
     @{$self->clients->{$id}}[4, 5] = ($pid, $ppid);
   }
+  $self->clients->{$id}[6] = time;
 }
 
 sub event_client_focus {
@@ -44,6 +45,7 @@ sub event_client_focus {
   my $previous_id = $self->previous_id;
   if($self->previous_id && (my $props = wmiir "/client/$previous_id/props")) {
     @{$self->clients->{$previous_id}}[0..2] = split /:/, $props, 3;
+    $self->clients->{$previous_id}->[6] = time;
   }
   $self->previous_id($id);
 }
@@ -75,7 +77,9 @@ sub key_list_clients(Modkey-slash) {
   my @clients = map {
     my $n = $self->clients->{$_}[2];
     substr($n =~ s/`!//gr, 0, 100) . "`!$_"
-  } grep defined $self->clients->{$_}[2], keys $self->clients;
+  } grep defined $self->clients->{$_}[2],
+      sort { $self->clients->{$b}[6] <=> $self->clients->{$a}[6] }
+        keys $self->clients;
 
   my $chrome_windows = $self->list_chrome_tabs;
   my %cr_id_map;
