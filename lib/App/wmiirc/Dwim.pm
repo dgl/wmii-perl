@@ -44,6 +44,7 @@ sub BUILD {
 sub action_xsel(Modkey-o) {
   my($self, @args) = @_;
   open my $fh, "-|", "xsel", "-o";
+  binmode $fh, ":encoding(UTF-8)";
   my $selection = join "", <$fh>;
   $self->action_default($selection, @args);
 }
@@ -51,6 +52,7 @@ sub action_xsel(Modkey-o) {
 sub action_xsel_action(Modkey-Shift-o) {
   my($self, @args) = @_;
   open my $fh, "-|", "xsel", "-o";
+  binmode $fh, ":encoding(UTF-8)";
   my $selection = join "", <$fh>;
   $self->core->dispatch("key_action", $selection);
 }

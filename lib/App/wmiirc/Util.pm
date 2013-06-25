@@ -85,6 +85,8 @@ sub wimenu {
   }
   my $pid = open2 my($out_fh, $in_fh), "wimenu",
     map +("-$_" => $opts{$_} // () ), keys %opts;
+  binmode $in_fh, ":encoding(UTF-8)";
+  binmode $out_fh, ":encoding(UTF-8)";
   print $in_fh join("\n",
     @items && ref $items[0] eq 'ARRAY' ? @{$items[0]} : @items), "\n";
   close $in_fh;
