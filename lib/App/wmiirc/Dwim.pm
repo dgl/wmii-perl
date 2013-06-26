@@ -1,5 +1,6 @@
 # ABSTRACT: A default action that does something useful (hopefully)
 package App::wmiirc::Dwim;
+use 5.014;
 use Const::Fast;
 use Net::Async::HTTP;
 use User::pwent;
