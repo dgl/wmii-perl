@@ -100,7 +100,7 @@ sub _update_next_event {
     $self->core->loop->add(my $timer = IO::Async::Timer::Absolute->new(
       time => $events[0]->[0]->epoch - $reminder,
       on_expire => sub {
-        $self->core->dispatch("event_msg", _render_line($events[0]));
+        $self->core->dispatch("event_msg_urgent", _render_line($events[0]));
         $self->_update_next_event;
       }
     ));
