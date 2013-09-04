@@ -112,13 +112,13 @@ sub key_action(Modkey-a) {
 my @progs;
 
 sub key_run(Modkey-p) {
-  my($self, $terminal) = @_;
+  my($self, $terminal, @args) = @_;
   if(!@progs) {
     $self->action_rehash(sub { $self->key_run });
     return;
   }
 
-  if(my $run = wimenu { name => "run:", history => "progs" }, \@progs) {
+  if(my $run = (@args ? "@args" : wimenu { name => "run:", history => "progs" }, \@progs)) {
     # Urgh, hacky
     my($prog) = $run =~ /(\S+)/;
     $run = "'$run'" if $terminal;
@@ -128,9 +128,10 @@ sub key_run(Modkey-p) {
 }
 
 sub key_run_terminal(Modkey-Shift-p) {
-  my($self) = @_;
-  $self->key_run($self->core->main_config->{terminal});
+  my($self, @args) = @_;
+  $self->key_run($self->core->main_config->{terminal}, @args);
 }
+*action_terminal = \&key_run_terminal;
 
 sub action_rehash {
   my($self, $finish) = @_;
