@@ -35,7 +35,7 @@ sub wmiir {
     return !$?;
   } else {
     $action = "ls" if $action eq 'read' and $file =~ m{/$};
-    my @items = qx{wmiir $action $file};
+    my @items = qx{wmiir $action '$file'};
     chomp @items;
     return wantarray ? @items : $items[0];
   }
