@@ -39,7 +39,7 @@ for my $alias(keys %aliases) {
 
 sub BUILD {
   my($self) = @_;
-  $self->_search_domain;
+  #$self->_search_domain;
 }
 
 sub action_xsel(Modkey-o) {

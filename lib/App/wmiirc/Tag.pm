@@ -112,10 +112,12 @@ sub key_tag_back(Modkey-comma) {
 
 sub key_tag_next(Modkey-period) {
   my($self, $dir) = @_;
-  my @tags = sort map s{/$}{}r, grep !/sel/, wmiir "/tag/";
+  my($cur) = wmiir "/tag/sel/ctl";
+  my $skip = "~";
+  $skip = "\0" if $cur =~ /^$skip/;
+  my @tags = sort grep !/^(?:sel$|$skip)/, map s{/$}{}r, wmiir "/tag/";
   @tags = reverse @tags if defined $dir && $dir == -1;
 
-  my($cur) = wmiir "/tag/sel/ctl";
   my $l = "";
   for my $tag(@tags) {
     wmiir "/ctl", "view $tag" if $l eq $cur;

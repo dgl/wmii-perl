@@ -168,7 +168,8 @@ sub key_terminal_here(Modkey-Control-Return) {
     (map /(\d+)/, grep /^pid /, @items)[0];
   return unless $pid;
 
-  my $is_ssh = readlink("/proc/$pid/exe") =~ m{/ssh$};
+  my $exe = readlink("/proc/$pid/exe");
+  my $is_ssh = $exe && $exe =~ m{/ssh$};
   if(!$is_ssh) {
     for my $child(map /(\d+)/, `ps --ppid=$pid ho pid`) {
       my $l = readlink "/proc/$child/exe";

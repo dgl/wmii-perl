@@ -141,8 +141,10 @@ sub dispatch {
       $self->{_cache}{$class} ||= $self->load($class);
       if(!ref $self->{_cache}{$class}) {
         warn "Failed to instantiate $class\n";
-      } else {
+      } elsif(defined wantarray) {
         $ret = $self->{_cache}{$class}->$event(@args);
+      } else {
+        $self->{_cache}{$class}->$event(@args);
       }
     }
   }
