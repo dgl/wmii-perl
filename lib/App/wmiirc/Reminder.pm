@@ -13,7 +13,7 @@ sub action_reminder {
   my $message = @message ? "@message" : wmiir "/client/sel/label";
   $message =~ s/(['"\\])/'\\$1'/g; # shell escape
 
-  system "(sleep $time && wmiir xwrite /event msg '$message')&";
+  system "(sleep $time && wmiir xwrite /event MsgUrgent '$message')&";
 }
 
 1;
