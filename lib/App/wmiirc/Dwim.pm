@@ -118,19 +118,18 @@ sub _search_domain {
 
   my $http = Net::Async::HTTP->new;
   $self->core->loop->add($http);
-  $http->do_request(
-    uri => URI->new($SEARCH_DOMAIN_FINDER),
-    on_response => sub {
+  my $future = $http->GET(URI->new($SEARCH_DOMAIN_FINDER))
+    ->on_done(sub {
       my($response) = @_;
       $self->search_domain($response->content);
       $self->core->loop->remove($http);
-    },
-    on_error => sub {
+    })
+    ->on_fail(sub {
       my($message) = @_;
       warn "Couldn't fetch search domain: $message\n";
       $self->core->loop->remove($http);
-    },
- );
+    });
+  $self->core->loop->await($future);
 }
 
 sub _getglob :lvalue {
