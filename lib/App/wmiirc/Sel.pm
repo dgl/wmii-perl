@@ -22,6 +22,7 @@ sub action_save {
   }
   $data =~ s/\n+/\n/g;
   $data =~ s/\n$//s;
+  return unless $data =~ /\S/;
   my $canonical = _canonicalise($data);
   if($canonical && $canonical ne $data) {
     $data = $canonical;
