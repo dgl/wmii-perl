@@ -59,6 +59,10 @@ sub render {
   # Take the mean of this and the previous power level, to hopefully give a
   # better estimate.
   my $power_now = ($self->_bat("power_now") + $previous_power) / 2;
+  if (!$power_now) {
+    $self->label({}, $config{no_battery});
+    return;
+  }
   $previous_power = $self->_bat("power_now");
   my $minutes = $power_now ? 60 * $self->_bat("energy_now") / $power_now
                            : -1;
@@ -82,7 +86,9 @@ sub render {
         $self->core->dispatch("event_msg", "Battery critical");
       }
 
-      if($minutes <= $config{info_minutes}) {
+      if($minutes_to_full == 0) {
+        $self->label(\%data, $config{on_ac});
+      } elsif($minutes <= $config{info_minutes}) {
         $self->fade_set($minutes / $config{info_minutes} * $self->fade_count);
         $self->label(\%data, $config{on_battery}, $self->fade_current_color);
       } else {
