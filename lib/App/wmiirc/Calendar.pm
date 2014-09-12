@@ -27,7 +27,7 @@ has _refresh_timer => (
       # with running 'google calendar today').  I mostly consider this a feature
       # (no notifications for all day events, ever).
       first_interval => int(rand 120) + $interval - time % $interval,
-      reschedule => 'skip',
+      reschedule => 'drift',
       on_tick => sub {
         $self->_update_events;
       },
