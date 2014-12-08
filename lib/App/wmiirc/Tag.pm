@@ -2,6 +2,7 @@ package App::wmiirc::Tag;
 # ABSTRACT: Keep track of tags
 use App::wmiirc::Plugin;
 with 'App::wmiirc::Role::Key';
+use experimental 'autoderef';
 
 has _last_tag => (
   is => 'rw'

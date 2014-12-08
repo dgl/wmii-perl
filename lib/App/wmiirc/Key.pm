@@ -3,6 +3,7 @@ package App::wmiirc::Key;
 use App::wmiirc::Plugin;
 use Data::Dump qw(dump);
 use IO::Async::Process;
+use experimental 'autoderef';
 
 {
   # Load external actions

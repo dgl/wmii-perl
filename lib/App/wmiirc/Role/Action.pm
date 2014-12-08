@@ -4,6 +4,7 @@ use 5.014;
 use Moo::Role;
 use App::wmiirc::Util;
 use Scalar::Util ();
+use experimental 'autoderef';
 
 # So actions can also have keyboard shortcuts
 with 'App::wmiirc::Role::Key';

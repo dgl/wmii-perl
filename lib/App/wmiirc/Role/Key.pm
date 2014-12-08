@@ -4,6 +4,7 @@ use 5.014;
 use Moo::Role;
 use App::wmiirc::Util;
 use Scalar::Util ();
+use experimental 'autoderef';
 
 my %config = config("keys", {
   Modkey => scalar(config("config", "modkey", "Mod4")),
