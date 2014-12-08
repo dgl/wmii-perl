@@ -2,6 +2,7 @@ package App::wmiirc::Client;
 # ABSTRACT: Keep track of clients
 use App::wmiirc::Plugin;
 use JSON;
+use experimental 'autoderef';
 with 'App::wmiirc::Role::Key';
 
 has clients => (
@@ -14,6 +15,14 @@ has previous_id => (
 );
 
 has _last_destroyed_ppid => (
+  is => 'rw',
+);
+
+has _last_msg => (
+  is => 'rw',
+);
+
+has _last_pid => (
   is => 'rw',
 );
 
@@ -140,12 +149,27 @@ sub event_shell_window_pid {
 # Undistract-me implementation
 # TODO: Split into module, needs ->client data for _last_destroyed_ppid though.
 sub event_command_done {
-  my($self, $window_id, $pid, @msg) = @_;
+  my($self, $window_id, $pid, $exit, @msg) = @_;
   my($cur_id) = wmiir "/client/sel/ctl";
   return if $cur_id && $cur_id eq $window_id;
+  return if $window_id && $self->clients->{$window_id}->[6]
+    && $self->clients->{$window_id}->[6] > time - 1;
 
   if(!$self->_last_destroyed_ppid or $pid != $self->_last_destroyed_ppid) {
-    $self->core->dispatch("event_msg", "done: @msg");
+    my $msg = "@msg";
+    if ($msg) {
+      $self->_last_msg($msg);
+      $self->_last_pid($pid);
+    } elsif($exit && $self->_last_pid && $pid == $self->_last_pid) {
+      $msg = $self->_last_msg;
+      $self->_last_pid(0);
+    } else {
+      $self->_last_msg("");
+      $self->_last_pid(0);
+      return;
+    }
+    $self->core->dispatch("event_msg", ($exit ? "fail($exit)" : "done") .
+      ": $msg");
   }
 }
 

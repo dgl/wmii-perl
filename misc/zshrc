@@ -19,7 +19,7 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen*)
 
      # Did the last command take longer than 10 seconds?
      if [ "$cmdstart" -gt 0 -a "$[$(date +%s) - $cmdstart]" -gt 10 ]; then
-       echo -ne '\e]777;done;'"$$;$curcmd"'\a\a'
+       echo -ne '\e]777;done;'"$$;0;$curcmd"'\a\a'
        cmdstart=0
      fi
      trap - WINCH
@@ -33,3 +33,6 @@ case $TERM in (*xterm*|rxvt*|(dt|k|E)term|screen*)
    }
    ;;
 esac
+
+# Prompt, note this doesn't work on its own, treat as an example for how to make the exit code stuff work.
+PS1="%{$fg_bold[$HOSTCOLOUR]%}%m:%{$reset_color%} %B%3~%b %{%(?.$fg_bold[$PCOLOUR].$fg_bold[yellow])]777;done;$$;%?;%}%#%{$reset_color%} "
