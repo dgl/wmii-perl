@@ -4,7 +4,6 @@ use 5.014;
 use Moo::Role;
 use App::wmiirc::Util;
 use Scalar::Util ();
-use experimental 'autoderef';
 
 my %config = config("keys", {
   Modkey => scalar(config("config", "modkey", "Mod4")),
@@ -30,7 +29,7 @@ after BUILD => sub {
 
   # Apologies, I seem to have invented yet another awful mini domain specific
   # language here.
-  for my $subname(grep /^(?:action_|key_)/, keys _getstash($self)) {
+  for my $subname(grep /^(?:action_|key_)/, keys %{_getstash($self)}) {
     my $cv = _getstash($self)->{$subname};
     my $name = $subname =~ s/^key_//r;
     my $key = $config{$name} || prototype $cv;

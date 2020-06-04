@@ -14,9 +14,8 @@ sub import {
     1;
   } or die;
   feature->import(":5.14"); # TODO: does this work, seem to need use 5.014 too?
-  strictures->import(1);
+  strict->import;
   warnings->unimport('illegalproto');
-  experimental->import('autoderef');
 }
 
 1;

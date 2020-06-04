@@ -2,7 +2,6 @@ package App::wmiirc::Client;
 # ABSTRACT: Keep track of clients
 use App::wmiirc::Plugin;
 use JSON;
-use experimental 'autoderef';
 with 'App::wmiirc::Role::Key';
 
 has clients => (
@@ -88,9 +87,9 @@ sub key_list_clients(Modkey-slash) {
     substr($n =~ s/`!//gr, 0, 100) . "`!$_"
   } grep defined $self->clients->{$_}[2],
       sort { $self->clients->{$b}[6] <=> $self->clients->{$a}[6] }
-        keys $self->clients;
+        keys %{$self->clients};
 
-  my $chrome_windows = $self->list_chrome_tabs;
+  my $chrome_windows = []; #$self->list_chrome_tabs;
   my %cr_id_map;
   for my $win(@$chrome_windows) {
     for my $tab(@{$win->{tabs}}) {
@@ -101,7 +100,7 @@ sub key_list_clients(Modkey-slash) {
             $tab->{title} && $self->clients->{$_}[2] &&
             $self->clients->{$_}[2] =~
                 /\Q$tab->{title}\E - (?:Chromium|Google Chrome)$/
-          } keys $self->clients;
+          } keys %{$self->clients};
         next if !@ids || @ids > 1; # Better way to handle this?
         @clients = grep !/`!$ids[0]$/, @clients;
         $cr_id_map{$win->{id}} = $ids[0];

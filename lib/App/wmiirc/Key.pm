@@ -3,7 +3,6 @@ package App::wmiirc::Key;
 use App::wmiirc::Plugin;
 use Data::Dump qw(dump);
 use IO::Async::Process;
-use experimental 'autoderef';
 
 {
   # Load external actions
@@ -95,7 +94,7 @@ sub key_close(Modkey-Shift-c) {
 sub key_action(Modkey-a) {
   my($self, @opts) = @_;
   my $menu = wimenu { name => "action:", history => "actions" },
-      sort grep !/^default$/, keys $self->core->_actions;
+      sort grep !/^default$/, keys %{$self->core->_actions};
   return unless defined $menu;
   my @menu = split / /, $menu;
   my($action, @args) = @opts ? ($menu[0], @opts,
@@ -166,7 +165,7 @@ sub key_raw(Modkey-Control-space) {
     wmiir "/keys", @raw_keys;
     $self->core->dispatch("event_notice", "Raw on ($raw_keys[0] to exit)");
   } else {
-    wmiir "/keys", keys $self->core->_keys;
+    wmiir "/keys", keys %{$self->core->_keys};
     $self->core->dispatch("event_notice", "Raw off");
   }
 }

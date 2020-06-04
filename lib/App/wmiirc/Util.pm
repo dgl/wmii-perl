@@ -1,6 +1,6 @@
 package App::wmiirc::Util;
 # ABSTRACT: Various utilities for wmii
-use strictures 1;
+use strict;
 use parent 'Exporter';
 use IPC::Open2;
 
