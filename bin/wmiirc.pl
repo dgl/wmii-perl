@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # ABSTRACT: Wmii should be configured to run this to use wmii-perl
 package
   App::wmiirc::main;
