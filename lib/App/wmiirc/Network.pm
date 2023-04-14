@@ -44,11 +44,12 @@ sub render {
   if(!$self->{_show_extra}) {
     my $info = qx{iwconfig $config{device}};
     my($essid, $off) = $info =~ /ESSID:(?:"(.*?)"|(off))/;
-    my($rate) = $info =~ /Bit Rate=(\d+)/;
+    $essid =~ s/\\x([0-9A-F]{2})/chr hex $1/eg;
+    my($rate, $unit) = $info =~ /Bit Rate=(\d+)\S* ([GM])/;
     my($ap) = $info =~ /Access Point: (.*?)$/m;
 
     my $unassociated = $ap =~ /:/ ? "" : " [N/A]";
-    $rate = $rate ? "${rate}M" : "?";
+    $rate = $rate ? "${rate}${unit}" : "?";
     $self->label($off ? "." : "$essid ($rate)$unassociated");
   } else {
     my($gateway) = qx{ip route show 0/0 dev $config{device}} =~ m{via (\S+)};
